@@ -1,0 +1,13 @@
+Nom du corps,Masse (kg),Rayon (km),Corps d’origine,Rayon Origine (km),Période orbitale (jours),Inclinaison axiale (°),Période de rotation (heures)
+Soleil,4.83e30,696340,-,-,-,7.25,25
+Mercure,3.30e23,2439.7,Soleil,57909227,88,0.034,1407.6
+Vénus,4.87e24,6051.8,Soleil,108209475,224.7,177.4,-5832.5
+Terre,5.97e24,6371,Soleil,149598262,365.2,23.5,24
+Mars,6.42e23,3389.5,Soleil,227943824,687,25.2,24.6
+Jupiter,1.90e27,69911,Soleil,778340821,4333,3.13,9.9
+Saturne,5.68e26,58232,Soleil,1424688984,10756,26.73,10.7
+Uranus,8.68e25,25362,Soleil,2872486821,30687,97.77,17.2
+Neptune,1.02e26,24622,Soleil,4498396441,60190,28.32,16.1
+Lune,7.34e22,1737.5,Terre,384400,27.3,6.68,27.3
+Phobos,1.06e16,11.2667,Mars,9378,0.3189,-,0.3189
+Deimos,1.48e15,6.2,Mars,23460,1.2624,-,1.2624
