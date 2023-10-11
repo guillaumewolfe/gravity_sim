@@ -1,8 +1,11 @@
 import pyglet
 from pyglet import shapes
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 class Button:
-    def __init__(self, window, x_rel, y_rel, width_rel, height_rel, text, color,font):
+    def __init__(self, window, x_rel, y_rel, width_rel, height_rel, text, color,font,opacity=255):
         self.window = window
         self.x_rel = x_rel
         self.y_rel = y_rel
@@ -14,13 +17,18 @@ class Button:
         self.label = None
         self.font=font
         self.hover = False
-        self.padding_color = (32, 247, 173, 255)
+        self.opacity = opacity
+        self.click_color = (32, 247, 173, 255)
         self.padding_color = (255, 255,255 , 255)
+        self.padding_color_perm = (255, 255,255 , 255)
+        self.padding_color = (140, 158, 189, 255)
         self.hover_padding = 5  # La taille supplémentaire pour l'effet de surbrillance
         self.rectangle = shapes.Rectangle(0, 0, 0, 0, color=self.color)
+        self.rectangle.opacity = opacity
         self.label = pyglet.text.Label('', font_name=self.font, font_size=12,
                                        x=0, y=0, anchor_x='center', anchor_y='center')
         self.hover_rectangle = shapes.Rectangle(0, 0, 0, 0, color=self.padding_color[:3])
+        self.hover_rectangle.opacity=opacity
         
         # Appelez update_position pour initialiser leurs positions
         self.update_position()
@@ -30,6 +38,10 @@ class Button:
         height = self.window.height * self.height_rel
         x = self.window.width * self.x_rel - width // 2
         y = self.window.height * self.y_rel - height // 2
+        self.normalSound =  pyglet.media.load('assets/sounds/normal_button.mp3', streaming=False)
+        self.startSound = pyglet.media.load('assets/sounds/start.mp3', streaming=False)
+        self.menuSound = pyglet.media.load('assets/sounds/menu.mp3', streaming=False)
+        self.closeSound = pyglet.media.load('assets/sounds/close.mp3', streaming=False)
         
         self.rectangle.x = x
         self.rectangle.y = y
@@ -48,9 +60,10 @@ class Button:
     def draw(self):
         if self.hover:
             color = self.padding_color
+            self.hover_rectangle.color=self.padding_color[:3]
             self.hover_rectangle.draw()
         else:
-            color = (126, 161, 196, 255) 
+            color = (140, 158, 189, 255) 
         self.label.color = color
         self.rectangle.draw()
         self.label.draw()
@@ -58,6 +71,20 @@ class Button:
         return (self.rectangle.x < x < self.rectangle.x + self.rectangle.width and
                 self.rectangle.y < y < self.rectangle.y + self.rectangle.height)
 
+    def play_sound(self,soundType):
+        if soundType == "normal":
+            self.normalSound.play()
+        elif soundType == "menu":
+            self.menuSound.play()
+        elif soundType == "start":
+            self.startSound.play()
+        elif soundType == "close":
+            self.closeSound.play()
+    def click(self):
+        self.padding_color = self.click_color
+
+    def unclick(self):
+        self.padding_color = self.padding_color_perm
 
 class Label:
     def __init__(self, window, text, x_percent, y_percent,font,color, font_size_percent=5):
@@ -93,3 +120,4 @@ class Label:
         self.label.x = self.calculate_x()
         self.label.y = self.calculate_y()
         self.label.draw()
+

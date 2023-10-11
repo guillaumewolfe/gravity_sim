@@ -8,6 +8,9 @@ def handle_input(window, current_state):
     @window.event
     def on_mouse_press(x, y, button, modifiers):
         current_state.on_mouse_press(x, y, button, modifiers)
+    @window.event
+    def on_mouse_release(x, y, button, modifiers):
+        current_state.on_mouse_released(x, y, button, modifiers)
         # ... (logique de gestion des entrées) ...
 
     @window.event

@@ -5,7 +5,7 @@ from src.ui import celestial_objects as CO
 import math
 
 def update_accel(obj,objects,dt):
-    G = 10**(-32)
+    G = 9**(-32)
     #Touver l'object en relation
     object_relation = None
     for o in objects:
@@ -40,7 +40,7 @@ def update_physics(objects, dt):
 
     for obj in objects:
         if obj.name!=obj.relation:
-            if obj.name=="Terre": print(obj.velocity)
+            #if obj.name=="Terre": print(obj.velocity)
             update_accel(obj,objects,dt)
             update_vitesse(obj,dt)
             update_positions(obj,dt)

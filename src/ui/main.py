@@ -12,10 +12,10 @@ font.add_file('assets/fonts/OpenSans-VariableFont_wdth,wght.ttf')
 myFont = "Open Sans"
 #myFont = "Arial"
 screen = pyglet.canvas.get_display().get_default_screen()
-WIDTH, HEIGHT = 1000,800
-window = pyglet.window.Window(WIDTH, HEIGHT, "Start Menu", resizable=True)
+WIDTH, HEIGHT = 1820,980
+window = pyglet.window.Window(WIDTH, HEIGHT, "Simulation", resizable=True)
 window.set_location((screen.width - WIDTH) // 2, (screen.height - HEIGHT) // 2)
-glClearColor(6/255, 20/255, 38/255, 1)
+glClearColor(1,1,1, 1)
 glEnable(GL_DEPTH_TEST)
 
 @window.event
@@ -34,11 +34,12 @@ def update(dt):
 pyglet.clock.schedule_interval(update, 1/60.0)
 
 
+
 #FPS:
 #Boucle
 def main():
     global current_state
-    current_state = states.StartMenuState(window)
+    current_state = states.LoadingState(window)
     controls.handle_input(window, current_state)
     pyglet.app.run()
 
