@@ -72,7 +72,7 @@ class StartMenuState(BaseState):
         medias = ressources
         self.background_video = medias["background_video"]
         self.background_music = medias["background_music"]
-        self.background_sprite = medias["background_sprite"]
+        #self.background_sprite = medias["background_sprite"]
         self.font="Open Sans"
 
         self.createVideoAndSound()
@@ -224,7 +224,6 @@ class LoadingState(BaseState):
         self.initiate_loading_animation()
         self.draw()
         self.window.flip()
-        print("Here")
 
         self.load_thread = Thread(target=self.load_media())
         self.load_thread.start()
@@ -233,7 +232,7 @@ class LoadingState(BaseState):
     def load_media(self):
         self.medias["background_video"] = pyglet.media.load('assets/animations/back.mp4')
         self.medias["background_music"] = pyglet.media.load('assets/sounds/music_background.mp3',streaming=False)
-        self.medias["background_sprite"] = pyglet.sprite.Sprite(pyglet.image.load_animation('assets/gif/blue2.gif'))
+        #self.medias["background_sprite"] = pyglet.sprite.Sprite(pyglet.image.load_animation('assets/gif/blue2.gif'))
         global ressources
         ressources = self.medias
         self.switch_to_menu()
@@ -248,7 +247,6 @@ class LoadingState(BaseState):
     
     def draw(self):
         self.labels.draw()
-        print("called")
         self.videoPlayer.get_texture().blit(0,0)
     
     def switch_to_menu(self):
