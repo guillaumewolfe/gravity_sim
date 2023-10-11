@@ -15,24 +15,36 @@ class Button:
         self.font=font
         self.hover = False
         self.padding_color = (32, 247, 173, 255)
-        self.padding_color = (255, 255, 255, 255)
+        self.padding_color = (255, 255,255 , 255)
         self.hover_padding = 5  # La taille supplémentaire pour l'effet de surbrillance
+        self.rectangle = shapes.Rectangle(0, 0, 0, 0, color=self.color)
+        self.label = pyglet.text.Label('', font_name=self.font, font_size=12,
+                                       x=0, y=0, anchor_x='center', anchor_y='center')
+        self.hover_rectangle = shapes.Rectangle(0, 0, 0, 0, color=self.padding_color[:3])
         
+        # Appelez update_position pour initialiser leurs positions
+        self.update_position()
 
     def update_position(self):
         width = self.window.width * self.width_rel
         height = self.window.height * self.height_rel
         x = self.window.width * self.x_rel - width // 2
         y = self.window.height * self.y_rel - height // 2
-        self.rectangle = shapes.Rectangle(x, y, width, height, color=self.color)
-        self.label = pyglet.text.Label(self.text, font_name=self.font, font_size=height * 0.4,
-                                       x=self.window.width * self.x_rel, y=self.window.height * self.y_rel,
-                                       anchor_x='center', anchor_y='center')
-        self.hover_rectangle = shapes.Rectangle(x - self.hover_padding,
-                                                y - self.hover_padding,
-                                                width + 2 * self.hover_padding,
-                                                height + 2 * self.hover_padding,
-                                                color=self.padding_color[:3])  # Couleur de surbrillance, ici blanc
+        
+        self.rectangle.x = x
+        self.rectangle.y = y
+        self.rectangle.width = width
+        self.rectangle.height = height
+        
+        self.label.text = self.text
+        self.label.font_size = height * 0.4
+        self.label.x = self.window.width * self.x_rel
+        self.label.y = self.window.height * self.y_rel
+
+        self.hover_rectangle.x = x - self.hover_padding
+        self.hover_rectangle.y = y - self.hover_padding
+        self.hover_rectangle.width = width + 2 * self.hover_padding
+        self.hover_rectangle.height = height + 2 * self.hover_padding
     def draw(self):
         if self.hover:
             color = self.padding_color

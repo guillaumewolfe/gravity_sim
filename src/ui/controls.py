@@ -3,6 +3,7 @@ from pyglet import shapes
 from pyglet.gl import *
 import states
 
+
 def handle_input(window, current_state):
     @window.event
     def on_mouse_press(x, y, button, modifiers):
@@ -29,4 +30,13 @@ def handle_input(window, current_state):
                 btn.hover = True
             else:
                 btn.hover = False
+    @window.event
+    def on_mouse_drag(x, y, dx, dy, button, modifiers):
+        if button == pyglet.window.mouse.RIGHT:
+            current_state.rotation(dx, 0, dy)
+        if button == pyglet.window.mouse.LEFT:
+            current_state.translation(dy, dx) 
+    @window.event
+    def on_mouse_scroll(x, y, scroll_x, scroll_y):
+        current_state.zoomer(scroll_y) 
             
