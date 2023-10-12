@@ -27,7 +27,8 @@ class BaseState:
         self.translation_x = 0
         self.zoom = 0
         self.buttons=[]
-        self.fade_transition = FadeTransition(self.window)
+        self.fade_duration = 1
+        self.fade_transition = FadeTransition(self.window,duration = self.fade_duration)
     def enter(self):
         pass
     def on_mouse_released(self,x,y,pressed,modif):
@@ -58,20 +59,26 @@ class BaseState:
             ressources["background_music"] = pyglet.media.load('assets/sounds/music_background.mp3',streaming=False)
         return ressources
 
-    def transition(self):
+    def transition_out(self):
         self.fade_transition.start_fade("out")
-        pyglet.clock.schedule_once(self.end_fade,self.fade_transition.duration)
-
-    def end_fade(self,dt):
+    def transition_in(self):
         self.fade_transition.start_fade("in")
 
+
+
+    def switch_state(self,NewState):
+        #self.transition_out()
+        pyglet.clock.schedule_once(lambda dt:self.exit(),1)
+        self.next_state=NewState(self.window)
 
 
     def exit(self):
         pass
     def close_app(self):
-
         pyglet.app.exit()
+
+    def on_mouse_press(self,x,y,button,modifiers):
+        pass
 
 
 
@@ -120,13 +127,10 @@ class StartMenuState(BaseState):
                 if btn.text == "Start":
                     btn.play_sound("start")
                     self.draw()
-                    self.transition()
-                    self.next_state = SimulationState(self.window)
-                    pyglet.clock.schedule_once(lambda dt:self.exit(),1)
+                    self.switch_state(SimulationState)
                 elif btn.text == "Close":
                     btn.play_sound("close")
                     pyglet.clock.schedule_once(lambda dt:self.close_app(),0.8)
-                    #self.exit()
                     self.close_app()
 
     def enter(self):
@@ -144,6 +148,7 @@ class StartMenuState(BaseState):
 
         if not self.video_texture:
             self.video_texture = StartMenuState.videoPlayer.get_texture()
+        self.window.set_visible(True)
 
     def createMusic(self):
         if StartMenuState.musicPlayer is None:
@@ -168,6 +173,7 @@ class StartMenuState(BaseState):
         self.label_welcome.draw()
         for button in self.buttons:
             button.draw()
+
 
     def exit(self):
         if StartMenuState.videoPlayer is not None:  
@@ -238,7 +244,7 @@ class SimulationState(BaseState):
             if btn.contains_point(x, y):
                     if btn.text == "Menu":
                         btn.play_sound("menu")
-                        self.next_state = StartMenuState(self.window)
+                        self.switch_state(StartMenuState)
                         
                     if btn.text == "Reset Position":
                         btn.play_sound("normal")
@@ -258,12 +264,16 @@ class LoadingState(BaseState):
         super().__init__()
         self.medias = {}
 
-        self.loading_video = pyglet.media.load('assets/animations/loading.mp4')
-        self.labels = Label(window, 'Bienvenue!', 0.5, 0.8,"Arial",(255, 255, 255, 255),12)
-
-        self.initiate_loading_animation()
+        self.loading_video = pyglet.media.load('assets/animations/loading_dust.mp4')
+        self.labels = Label(window, 'Chargement...', 0.5, 0.1,"Open Sans",(255, 255, 255, 210),3)
+        self.loading_animation = False
+        self.loadingTime = 0
+        self.window.flip()
+        if self.loading_animation:
+            self.loadingTime = 2
+            self.initiate_loading_animation()
         self.load_media()
-        pyglet.clock.schedule_once(self.switch_to_menu,5)
+        pyglet.clock.schedule_once(self.switch_to_menu,self.loadingTime)
 
 
     
@@ -282,17 +292,21 @@ class LoadingState(BaseState):
         self.videoPlayer.play()
     
     def draw(self):
-        texture = self.videoPlayer.get_texture()
-        if texture:
-            texture.blit(0,0)
+        if self.loading_animation:
+            texture = self.videoPlayer.get_texture()
+            if texture:
+                texture.blit(0,0)
         self.labels.draw()
+
     
     def switch_to_menu(self,dt=None):
-        self.videoPlayer.pause()
-        self.videoPlayer.delete()
-
-        self.transition()
-        self.next_state = StartMenuState(self.window)
+        self.switch_state(StartMenuState)
+    
+    def exit(self):
+        if self.loading_animation:
+            print("exit")
+            self.videoPlayer.pause()
+            self.videoPlayer.delete()
 
 
 

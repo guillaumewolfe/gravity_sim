@@ -13,7 +13,7 @@ font.add_file('assets/fonts/OpenSans-VariableFont_wdth,wght.ttf')
 screen = pyglet.canvas.get_display().get_default_screen()
 WIDTH, HEIGHT = 1820,980
 pyglet.options['vsync'] = False
-window = pyglet.window.Window(WIDTH, HEIGHT, "Simulation", resizable=True)
+window = pyglet.window.Window(WIDTH, HEIGHT, "Simulation", resizable=True,visible=False)
 window.set_location((screen.width - WIDTH) // 2, (screen.height - HEIGHT) // 2)
 glClearColor(1,1,1, 1)
 glEnable(GL_DEPTH_TEST)
@@ -31,7 +31,7 @@ def update(dt):
         current_state = current_state.next_state
         controls.handle_input(window, current_state)
 
-pyglet.clock.schedule_interval(update, 1/30.0)
+pyglet.clock.schedule_interval(update, 1/60.0)
 
 
 
