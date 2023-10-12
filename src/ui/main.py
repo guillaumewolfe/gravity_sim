@@ -10,8 +10,6 @@ import states
 
 #Génération de la fenêtre
 font.add_file('assets/fonts/OpenSans-VariableFont_wdth,wght.ttf')
-myFont = "Open Sans"
-#myFont = "Arial"
 screen = pyglet.canvas.get_display().get_default_screen()
 WIDTH, HEIGHT = 1820,980
 pyglet.options['vsync'] = False

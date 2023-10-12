@@ -18,6 +18,10 @@ class Button:
         self.font=font
         self.hover = False
         self.opacity = opacity
+        self.normalSound =  pyglet.media.load('assets/sounds/normal_button.mp3', streaming=False)
+        self.startSound = pyglet.media.load('assets/sounds/start.mp3', streaming=False)
+        self.menuSound = pyglet.media.load('assets/sounds/menu.mp3', streaming=False)
+        self.closeSound = pyglet.media.load('assets/sounds/close.mp3', streaming=False)
         self.click_color = (32, 247, 173, 255)
         self.padding_color = (255, 255,255 , 255)
         self.padding_color_perm = (255, 255,255 , 255)
@@ -38,10 +42,6 @@ class Button:
         height = self.window.height * self.height_rel
         x = self.window.width * self.x_rel - width // 2
         y = self.window.height * self.y_rel - height // 2
-        self.normalSound =  pyglet.media.load('assets/sounds/normal_button.mp3', streaming=False)
-        self.startSound = pyglet.media.load('assets/sounds/start.mp3', streaming=False)
-        self.menuSound = pyglet.media.load('assets/sounds/menu.mp3', streaming=False)
-        self.closeSound = pyglet.media.load('assets/sounds/close.mp3', streaming=False)
         
         self.rectangle.x = x
         self.rectangle.y = y

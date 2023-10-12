@@ -116,6 +116,7 @@ def draw_objects(window, labels, buttons, objects, rotation_x, rotation_y, rotat
     for label in labels:
         label.draw()
     for btn in buttons:
+        btn.update_position()
         btn.draw()
     
     # Calculez les coordonnées des vecteurs dans l'espace de la caméra
