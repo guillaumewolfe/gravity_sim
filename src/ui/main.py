@@ -6,6 +6,7 @@ import sys
 sys.path.insert(0, 'C:/Users/guill/Documents/gravity_sim/src/engine')
 import controls
 import states
+from GameStateManager import GameStateManager
 
 
 #Génération de la fenêtre
