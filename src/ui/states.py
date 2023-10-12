@@ -9,6 +9,7 @@ from src.engine import physics
 from celestial_objects import CelestialObject,create_celestial_objects,CELESTIAL_PARAMETERS
 from threading import Thread
 from memory_profiler import profile
+from transition import FadeTransition
 
 ressources = {}
 
@@ -26,6 +27,7 @@ class BaseState:
         self.translation_x = 0
         self.zoom = 0
         self.buttons=[]
+        self.fade_transition = FadeTransition(self.window)
     def enter(self):
         pass
     def on_mouse_released(self,x,y,pressed,modif):
@@ -56,6 +58,13 @@ class BaseState:
             ressources["background_music"] = pyglet.media.load('assets/sounds/music_background.mp3',streaming=False)
         return ressources
 
+    def transition(self):
+        self.fade_transition.start_fade("out")
+        pyglet.clock.schedule_once(self.end_fade,self.fade_transition.duration)
+
+    def end_fade(self,dt):
+        self.fade_transition.start_fade("in")
+
 
 
     def exit(self):
@@ -81,8 +90,8 @@ class StartMenuState(BaseState):
     musicPlayer = None
 
     def __init__(self,window):
-        super().__init__()
         self.window = window
+        super().__init__()
         self.medias = self.load_shared_resources()
         self.background_video = self.medias["background_video"]
         self.background_music = self.medias["background_music"]
@@ -111,11 +120,14 @@ class StartMenuState(BaseState):
                 if btn.text == "Start":
                     btn.play_sound("start")
                     self.draw()
+                    self.transition()
                     self.next_state = SimulationState(self.window)
+                    pyglet.clock.schedule_once(lambda dt:self.exit(),1)
                 elif btn.text == "Close":
                     btn.play_sound("close")
                     pyglet.clock.schedule_once(lambda dt:self.close_app(),0.8)
-                    #self.close_app()
+                    #self.exit()
+                    self.close_app()
 
     def enter(self):
         # Initialisez les éléments du menu
@@ -127,7 +139,7 @@ class StartMenuState(BaseState):
             StartMenuState.videoPlayer.loop = True
             video_duration = StartMenuState.videoPlayer.source.duration
             StartMenuState.videoPlayer.seek(video_duration/2) 
-            render.setup_2d_projection(self.window)
+            render.setup_2d_projection(self.window)  
         StartMenuState.videoPlayer.play()
 
         if not self.video_texture:
@@ -158,7 +170,7 @@ class StartMenuState(BaseState):
             button.draw()
 
     def exit(self):
-        if StartMenuState.videoPlayer is not None:
+        if StartMenuState.videoPlayer is not None:  
             StartMenuState.videoPlayer.pause()
 
 
@@ -178,13 +190,13 @@ class StartMenuState(BaseState):
 
 class SimulationState(BaseState):
     def __init__(self,window):
+        self.window = window
         super().__init__()
 
         self.simulation_time = 0  # représente le temps écoulé en secondes (ou toute autre unité de temps que vous souhaitez utiliser)
         self.time_multiplier = 2
 
         self.font="Open Sans"
-        self.window = window
         self.labels = [
             Label(window, 'Simulation', 0.5, 0.9,self.font,(255, 255, 255, 205),4),
             Label(window, f"Simulation Time: {self.simulation_time:.2f} seconds", 0.5, 0.1,self.font,(126, 161, 196, 255),2)           
@@ -242,8 +254,8 @@ class SimulationState(BaseState):
 
 class LoadingState(BaseState):
     def __init__(self,window):
-        super().__init__()
         self.window = window
+        super().__init__()
         self.medias = {}
 
         self.loading_video = pyglet.media.load('assets/animations/loading.mp4')
@@ -251,7 +263,7 @@ class LoadingState(BaseState):
 
         self.initiate_loading_animation()
         self.load_media()
-        pyglet.clock.schedule_once(self.switch_to_menu,1)
+        pyglet.clock.schedule_once(self.switch_to_menu,5)
 
 
     
@@ -279,6 +291,7 @@ class LoadingState(BaseState):
         self.videoPlayer.pause()
         self.videoPlayer.delete()
 
+        self.transition()
         self.next_state = StartMenuState(self.window)
 
 
