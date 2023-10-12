@@ -8,6 +8,7 @@ from src.engine import render
 from src.engine import physics
 from celestial_objects import CelestialObject,create_celestial_objects,CELESTIAL_PARAMETERS
 from threading import Thread
+from memory_profiler import profile
 
 ressources = {}
 
@@ -66,6 +67,7 @@ class BaseState:
 
 
 class StartMenuState(BaseState):
+
     def __init__(self,window):
         super().__init__()
         self.window = window
@@ -74,6 +76,8 @@ class StartMenuState(BaseState):
         self.background_video = self.medias["background_video"]
         self.background_music = self.medias["background_music"]
         self.font="Open Sans"
+
+        self.video_texture = None
 
 
 
@@ -107,18 +111,14 @@ class StartMenuState(BaseState):
         # Initialisez les éléments du menu
         pass
     def createVideoAndSound(self):
+       
+        self.videoPlayer = pyglet.media.Player()
+        self.videoPlayer.queue(self.background_video)
+        self.videoPlayer.loop = True
 
-        self.videoPlayer = self.medias.get("buffer_player",pyglet.media.Player())
-        if not self.videoPlayer:
-            self.videoPlayer.queue(self.background_video)
-
-        
-        #self.videoPlayer = pyglet.media.Player()
-        #self.videoPlayer.queue(self.background_video)
-        #self.videoPlayer.loop = True
         video_duration = self.videoPlayer.source.duration
         self.videoPlayer.seek(video_duration/2) 
-        self.videoPlayer.loop = True
+
         render.setup_2d_projection(self.window)
         self.videoPlayer.play()
 
@@ -131,7 +131,10 @@ class StartMenuState(BaseState):
         #update_physics()
         pass
     def update_positions(self):
-        self.videoPlayer.get_texture().blit(0,0)
+        if self.video_texture is None:
+            self.video_texture = self.videoPlayer.get_texture()
+        self.video_texture.blit(0,0)
+        self.video_texture = None
         for button in self.buttons:
             button.update_position()
 
@@ -234,24 +237,14 @@ class LoadingState(BaseState):
         self.initiate_loading_animation()
         self.draw()
         self.window.flip()
+        self.load_media()
+        pyglet.clock.schedule_once(self.switch_to_menu,1)
 
-
-        self.load_thread = Thread(target=self.load_media())
-        self.load_thread.start()
 
     
     def load_media(self):
-        self.medias["background_video"] = pyglet.media.load('assets/animations/background.mp4')
+        self.medias["background_video"] = pyglet.media.load('assets/animations/back.mp4')
         self.medias["background_music"] = pyglet.media.load('assets/sounds/music_background.mp3',streaming=False)
-
-        self.medias["buffer_player"] = pyglet.media.Player()
-        self.medias["buffer_player"].queue(self.medias["background_video"])
-        self.medias["buffer_player"].play()
-        pyglet.clock.schedule_once(self.switch_to_menu,self.medias["buffer_player"].source.duration/5)
-        self.medias["buffer_player"].pause()
-
-
-
         global ressources
         ressources = self.medias
 
@@ -264,10 +257,13 @@ class LoadingState(BaseState):
         self.videoPlayer.play()
     
     def draw(self):
-        self.videoPlayer.get_texture().blit(0,0)
+        #self.videoPlayer.get_texture().blit(0,0)
         self.labels.draw()
     
     def switch_to_menu(self,dt=None):
+        self.videoPlayer.pause()
+        self.videoPlayer.delete()
+
         self.next_state = StartMenuState(self.window)
 
 

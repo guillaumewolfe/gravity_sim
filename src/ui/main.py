@@ -6,7 +6,9 @@ import sys
 sys.path.insert(0, 'C:/Users/guill/Documents/gravity_sim/src/engine')
 import controls
 import states
-import gc
+import cProfile
+import pstats
+from memory_profiler import profile
 
 #Génération de la fenêtre
 font.add_file('assets/fonts/OpenSans-VariableFont_wdth,wght.ttf')
@@ -24,7 +26,6 @@ glEnable(GL_DEPTH_TEST)
 def on_draw():
     window.clear()
     current_state.draw()
-    gc.collect()
 
 def update(dt):
     global current_state
@@ -40,6 +41,7 @@ pyglet.clock.schedule_interval(update, 1/30.0)
 
 #FPS:
 #Boucle
+
 def main():
     global current_state
     current_state = states.LoadingState(window)
