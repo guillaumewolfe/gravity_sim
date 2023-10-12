@@ -24,6 +24,7 @@ class BaseState:
         self.translation_y = 0
         self.translation_x = 0
         self.zoom = 0
+        self.buttons=[]
     def enter(self):
         pass
     def on_mouse_released(self,x,y,pressed,modif):
@@ -69,11 +70,12 @@ class StartMenuState(BaseState):
         super().__init__()
         self.window = window
         global ressources
-        medias = ressources
-        self.background_video = medias["background_video"]
-        self.background_music = medias["background_music"]
-        #self.background_sprite = medias["background_sprite"]
+        self.medias = ressources
+        self.background_video = self.medias["background_video"]
+        self.background_music = self.medias["background_music"]
         self.font="Open Sans"
+
+
 
         self.createVideoAndSound()
 
@@ -105,10 +107,18 @@ class StartMenuState(BaseState):
         # Initialisez les éléments du menu
         pass
     def createVideoAndSound(self):
-        self.videoPlayer = pyglet.media.Player()
-        self.videoPlayer.queue(self.background_video)
-        self.videoPlayer.loop = True
 
+        self.videoPlayer = self.medias.get("buffer_player",pyglet.media.Player())
+        if not self.videoPlayer:
+            self.videoPlayer.queue(self.background_video)
+
+        
+        #self.videoPlayer = pyglet.media.Player()
+        #self.videoPlayer.queue(self.background_video)
+        #self.videoPlayer.loop = True
+        video_duration = self.videoPlayer.source.duration
+        self.videoPlayer.seek(video_duration/2) 
+        self.videoPlayer.loop = True
         render.setup_2d_projection(self.window)
         self.videoPlayer.play()
 
@@ -225,17 +235,25 @@ class LoadingState(BaseState):
         self.draw()
         self.window.flip()
 
+
         self.load_thread = Thread(target=self.load_media())
         self.load_thread.start()
 
     
     def load_media(self):
-        self.medias["background_video"] = pyglet.media.load('assets/animations/back.mp4')
+        self.medias["background_video"] = pyglet.media.load('assets/animations/background.mp4')
         self.medias["background_music"] = pyglet.media.load('assets/sounds/music_background.mp3',streaming=False)
-        #self.medias["background_sprite"] = pyglet.sprite.Sprite(pyglet.image.load_animation('assets/gif/blue2.gif'))
+
+        self.medias["buffer_player"] = pyglet.media.Player()
+        self.medias["buffer_player"].queue(self.medias["background_video"])
+        self.medias["buffer_player"].play()
+        pyglet.clock.schedule_once(self.switch_to_menu,self.medias["buffer_player"].source.duration/5)
+        self.medias["buffer_player"].pause()
+
+
+
         global ressources
         ressources = self.medias
-        self.switch_to_menu()
 
     def initiate_loading_animation(self):
         self.videoPlayer = pyglet.media.Player()
@@ -246,10 +264,10 @@ class LoadingState(BaseState):
         self.videoPlayer.play()
     
     def draw(self):
-        self.labels.draw()
         self.videoPlayer.get_texture().blit(0,0)
+        self.labels.draw()
     
-    def switch_to_menu(self):
+    def switch_to_menu(self,dt=None):
         self.next_state = StartMenuState(self.window)
 
 
