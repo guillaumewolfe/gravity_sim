@@ -48,6 +48,16 @@ class BaseState:
         # Mettez à jour les angles de rotation en fonction du mouvement de la souris
         sensitivity = 1
         self.zoom += zoom * sensitivity
+
+    def load_shared_resources(self):
+        global ressources
+        if not ressources:
+            ressources["background_video"] = pyglet.media.load('assets/animations/back.mp4')
+            ressources["background_music"] = pyglet.media.load('assets/sounds/music_background.mp3',streaming=False)
+        return ressources
+
+
+
     def exit(self):
         pass
     def close_app(self):
@@ -67,21 +77,22 @@ class BaseState:
 
 
 class StartMenuState(BaseState):
+    videoPlayer = None
+    musicPlayer = None
 
     def __init__(self,window):
         super().__init__()
         self.window = window
-        global ressources
-        if ressources:
-            self.medias = ressources
-            self.background_video = self.medias["background_video"]
-            self.background_music = self.medias["background_music"]
+        self.medias = self.load_shared_resources()
+        self.background_video = self.medias["background_video"]
+        self.background_music = self.medias["background_music"]
         self.video_texture = None
         self.font="Open Sans"
 
 
 
-        self.createVideoAndSound()
+        self.createVideo()
+        self.createMusic()
 
         self.label_welcome = Label(window, 'Bienvenue!', 0.5, 0.8,self.font,(255, 255, 255, 255),12)
 
@@ -109,24 +120,25 @@ class StartMenuState(BaseState):
     def enter(self):
         # Initialisez les éléments du menu
         pass
-    def createVideoAndSound(self):
-       
-        self.videoPlayer = pyglet.media.Player()
-        self.videoPlayer.queue(self.background_video)
-        self.videoPlayer.loop = True
-
-        video_duration = self.videoPlayer.source.duration
-        self.videoPlayer.seek(video_duration/2) 
-
-        render.setup_2d_projection(self.window)
-        self.videoPlayer.play()
-
-        self.background_music.loop = True
-        self.background_music.play()
+    def createVideo(self):
+        if  StartMenuState.videoPlayer is None:
+            StartMenuState.videoPlayer = pyglet.media.Player()
+            StartMenuState.videoPlayer.queue(self.background_video)
+            StartMenuState.videoPlayer.loop = True
+            video_duration = StartMenuState.videoPlayer.source.duration
+            StartMenuState.videoPlayer.seek(video_duration/2) 
+            render.setup_2d_projection(self.window)
+        StartMenuState.videoPlayer.play()
 
         if not self.video_texture:
-            self.video_texture = self.videoPlayer.get_texture()
+            self.video_texture = StartMenuState.videoPlayer.get_texture()
 
+    def createMusic(self):
+        if StartMenuState.musicPlayer is None:
+            StartMenuState.musicPlayer = pyglet.media.Player()
+            StartMenuState.musicPlayer.queue(self.background_music)
+            StartMenuState.musicPlayer.loop = True
+            StartMenuState.musicPlayer.play()
 
     def update(self,dt):
         # Vérifiez si un bouton a été cliqué, etc.
@@ -137,7 +149,6 @@ class StartMenuState(BaseState):
         for button in self.buttons:
             button.update_position()
 
-
     def draw(self):
         # Update "Start" button position
         render.setup_2d_projection(self.window)
@@ -146,6 +157,9 @@ class StartMenuState(BaseState):
         for button in self.buttons:
             button.draw()
 
+    def exit(self):
+        if StartMenuState.videoPlayer is not None:
+            StartMenuState.videoPlayer.pause()
 
 
 
