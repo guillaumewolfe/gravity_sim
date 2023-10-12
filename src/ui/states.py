@@ -72,16 +72,16 @@ class StartMenuState(BaseState):
         super().__init__()
         self.window = window
         global ressources
-        self.medias = ressources
-        self.background_video = self.medias["background_video"]
-        self.background_music = self.medias["background_music"]
+        if ressources:
+            self.medias = ressources
+            self.background_video = self.medias["background_video"]
+            self.background_music = self.medias["background_music"]
+        self.video_texture = None
         self.font="Open Sans"
 
-        self.video_texture = None
 
 
-
-        self.createVideoAndSound()
+        #self.createVideoAndSound()
 
         self.label_welcome = Label(window, 'Bienvenue!', 0.5, 0.8,self.font,(255, 255, 255, 255),12)
 
@@ -125,16 +125,18 @@ class StartMenuState(BaseState):
         self.background_music.loop = True
         self.background_music.play()
 
+        if not self.video_texture:
+            self.video_texture = self.videoPlayer.get_texture()
+
 
     def update(self,dt):
         # Vérifiez si un bouton a été cliqué, etc.
         #update_physics()
         pass
     def update_positions(self):
-        if self.video_texture is None:
-            self.video_texture = self.videoPlayer.get_texture()
-        self.video_texture.blit(0,0)
-        self.video_texture = None
+        if self.video_texture:
+            pass
+            #self.video_texture.blit(0,0)
         for button in self.buttons:
             button.update_position()
 
@@ -232,13 +234,14 @@ class LoadingState(BaseState):
         super().__init__()
         self.window = window
         self.medias = {}
-        self.loading_video = pyglet.media.load('assets/animations/loading.mp4')
-        self.labels = Label(window, 'Bienvenue!', 0.5, 0.8,"Arial",(255, 255, 255, 255),12)
-        self.initiate_loading_animation()
-        self.draw()
-        self.window.flip()
-        self.load_media()
-        pyglet.clock.schedule_once(self.switch_to_menu,1)
+        #self.loading_video = pyglet.media.load('assets/animations/loading.mp4')
+        #self.labels = Label(window, 'Bienvenue!', 0.5, 0.8,"Arial",(255, 255, 255, 255),12)
+        #self.initiate_loading_animation()
+        #self.draw()
+        #self.window.flip()
+        #self.load_media()
+        #pyglet.clock.schedule_once(self.switch_to_menu,1)
+        self.switch_to_menu()
 
 
     
@@ -257,12 +260,13 @@ class LoadingState(BaseState):
         self.videoPlayer.play()
     
     def draw(self):
+        pass
         #self.videoPlayer.get_texture().blit(0,0)
-        self.labels.draw()
+        #self.labels.draw()
     
     def switch_to_menu(self,dt=None):
-        self.videoPlayer.pause()
-        self.videoPlayer.delete()
+        #self.videoPlayer.pause()
+        #self.videoPlayer.delete()
 
         self.next_state = StartMenuState(self.window)
 

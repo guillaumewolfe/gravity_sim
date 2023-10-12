@@ -6,9 +6,7 @@ import sys
 sys.path.insert(0, 'C:/Users/guill/Documents/gravity_sim/src/engine')
 import controls
 import states
-import cProfile
-import pstats
-from memory_profiler import profile
+
 
 #Génération de la fenêtre
 font.add_file('assets/fonts/OpenSans-VariableFont_wdth,wght.ttf')
