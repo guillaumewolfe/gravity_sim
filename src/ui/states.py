@@ -257,7 +257,10 @@ class SimulationState(BaseState):
         render.draw_objects(self.window,self.labels,self.buttons, self.objects,self.rotation_x,self.rotation_y,self.rotation_z,self.translation_x,self.translation_y,self.zoom,self.background_texture)
 
     def on_mouse_press(self, x, y, button, modifiers):
+        self.frame_buffer.bind()
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
         render.draw_objects(self.window,self.labels,self.buttons, self.objects,self.rotation_x,self.rotation_y,self.rotation_z,self.translation_x,self.translation_y,self.zoom,self.background_texture,selection_mode=True,frame_buffer=self.frame_buffer)
+       
         pixel_data = (GLubyte*3)()
         glReadPixels(x,y,1,1,GL_RGB,GL_UNSIGNED_BYTE, pixel_data)
         pixel_color = [pixel_data[i]/255.0 for i in range(3)]
@@ -265,6 +268,8 @@ class SimulationState(BaseState):
         selected_object_index = round(pixel_color[0]/spacing)
         selected_object = self.objects[selected_object_index]
         print(f"Selected object: {selected_object.name}, Selected index :{selected_object_index} Pixel = {pixel_color}")
+        
+        self.frame_buffer.unbind()
         glBindFramebuffer(GL_FRAMEBUFFER_EXT,0)
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
         self.draw()
