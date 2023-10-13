@@ -4,26 +4,29 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 from src.ui import celestial_objects as CO
 import math
 
-def update_accel(obj,objects,dt):
-    G = 9**(-32)
-    #Touver l'object en relation
-    object_relation = None
-    for o in objects:
-        if obj.relation == o.name:
-            object_relation = o
-    
-    #Distance = math.sqrt((x_obj1-x_obj2)**2+(y_obj1-y_obj2)**2+(y_obj1-y_obj2)**2)
-    #accel = F/m = G*m_2/Distance**2 vers m2. 
-    #TODO : 1-Trouver l'intensité de l'accélération 2-Faire x vecteur direction.
-    #Vecteur unité : 
-    vecteur_unite = [elem - object_relation.position[i] for i,elem in enumerate(obj.position)]
-    magneture_unit_vector = math.sqrt(sum(i**2 for i in vecteur_unite))
-    vecteur_unite = [-i/magneture_unit_vector for i in vecteur_unite]
+def update_accel(obj, objects, dt):
+    G = 6.67430e-11  # Constante gravitationnelle en m^3⋅kg^−1⋅s^−2
 
-    distance = magneture_unit_vector
-    accel = G * object_relation.weight / distance**2
-    #if obj.name=="Terre": print(accel)
-    obj.accel = [obj.accel[index]+element * accel for index,element in enumerate(vecteur_unite)]
+    total_accel = [0, 0, 0]  # Accélération totale due à la gravité de tous les autres objets
+    
+    for other_obj in objects:
+        if obj.name != other_obj.name:
+            # Calculer le vecteur directionnel entre obj et other_obj
+            vector_direction = [other_pos - obj_pos for other_pos, obj_pos in zip(other_obj.real_position, obj.real_position)]
+            distance = math.sqrt(sum(coord ** 2 for coord in vector_direction))
+            
+            # Normaliser le vecteur directionnel
+            unit_vector = [coord / distance for coord in vector_direction]
+            
+            # Calculer l'accélération due à la gravité entre obj et other_obj
+            accel_magnitude = G * other_obj.weight / distance**2
+            accel_vector = [unit * accel_magnitude for unit in unit_vector]
+            
+            # Ajouter cette accélération à l'accélération totale
+            total_accel = [total + accel for total, accel in zip(total_accel, accel_vector)]
+            
+    obj.accel = total_accel
+
 
 
 
@@ -32,15 +35,24 @@ def update_vitesse(obj,dt):
     correction = 1
     obj.velocity = [elem+obj.accel[index]*dt*correction for index,elem in enumerate(obj.velocity)]
 
-def update_positions(obj,dt):
-    correction = 1
-    obj.position = [elem+obj.velocity[index]*dt*correction for index,elem in enumerate(obj.position)]
+def update_positions(obj, dt):
+    # mise à jour de la position réelle
+    obj.real_position = [obj.real_position[i] + obj.velocity[i] * dt for i in range(3)]
+    
+    # mise à jour de la position de simulation (mise à l'échelle)
+    obj.position_simulation = [CO.SimulationScale.to_distance(coord) for coord in obj.real_position]
+
+def update_rotation(obj,dt):
+    obj.rotation_siderale_angle += obj.rotation_siderale_vitesse*dt
+    obj.rotation_siderale_angle = obj.rotation_siderale_angle%360
     
 def update_physics(objects, dt):
 
     for obj in objects:
+        update_rotation(obj,dt)
+        #if obj.name=="Soleil": print(obj.rotation_siderale_angle)
         if obj.name!=obj.relation:
-            #if obj.name=="Terre": print(obj.velocity)
+            #if obj.name=="Soleil": print(obj.rotation_siderale_angle)
             update_accel(obj,objects,dt)
             update_vitesse(obj,dt)
             update_positions(obj,dt)

@@ -1,15 +1,17 @@
 import pyglet
 from pyglet import shapes
 from pyglet_objects import Button,Label
+from pyglet.gl import *
 import os
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 from src.engine import render
 from src.engine import physics
 from celestial_objects import CelestialObject,create_celestial_objects,CELESTIAL_PARAMETERS
-from threading import Thread
 from memory_profiler import profile
 from transition import FadeTransition
+from raycast import dot,intersect,get_normalized_coordinates,intersect_ray_sphere
+
 
 ressources = {}
 
@@ -76,6 +78,8 @@ class BaseState:
         pass
     def close_app(self):
         pyglet.app.exit()
+    def pause(self):
+        pass
 
     def on_mouse_press(self,x,y,button,modifiers):
         pass
@@ -104,6 +108,7 @@ class StartMenuState(BaseState):
         self.background_music = self.medias["background_music"]
         self.video_texture = None
         self.font="Open Sans"
+        self.objects=[]
 
 
 
@@ -116,22 +121,6 @@ class StartMenuState(BaseState):
             Button(self.window, 0.5, 0.45, 0.25, 0.1, "Start", (255, 255, 255),self.font,opacity=175),
             Button(self.window, 0.5, 0.3, 0.25, 0.1, "Close", (255, 255,255),self.font,opacity=175)
         ]
-
-    def on_mouse_press(self, x, y, button, modifiers):
-            for btn in self.buttons:
-                btn.click()
-    def on_mouse_released(self, x, y, button, modifiers):
-        for btn in self.buttons:
-            btn.unclick()
-            if btn.contains_point(x, y):
-                if btn.text == "Start":
-                    btn.play_sound("start")
-                    self.draw()
-                    self.switch_state(SimulationState)
-                elif btn.text == "Close":
-                    btn.play_sound("close")
-                    pyglet.clock.schedule_once(lambda dt:self.close_app(),0.8)
-                    self.close_app()
 
     def enter(self):
         # Initialisez les éléments du menu
@@ -174,6 +163,22 @@ class StartMenuState(BaseState):
         for button in self.buttons:
             button.draw()
 
+    def on_mouse_press(self, x, y, button, modifiers):
+        for btn in self.buttons:
+            btn.click()
+    def on_mouse_released(self, x, y, button, modifiers):
+        for btn in self.buttons:
+            btn.unclick()
+            if btn.contains_point(x, y):
+                if btn.text == "Start":
+                    btn.play_sound("start")
+                    self.draw()
+                    self.switch_state(SimulationState)
+                elif btn.text == "Close":
+                    btn.play_sound("close")
+                    pyglet.clock.schedule_once(lambda dt:self.close_app(),0.8)
+                    self.close_app()
+
 
     def exit(self):
         if StartMenuState.videoPlayer is not None:  
@@ -198,20 +203,24 @@ class SimulationState(BaseState):
     def __init__(self,window):
         self.window = window
         super().__init__()
-
+        self.isPaused = False
         self.simulation_time = 0  # représente le temps écoulé en secondes (ou toute autre unité de temps que vous souhaitez utiliser)
-        self.time_multiplier = 2
+        self.time_multiplier = 10_000
+        self.time_multiplier = 1
 
         self.font="Open Sans"
         self.labels = [
             Label(window, 'Simulation', 0.5, 0.9,self.font,(255, 255, 255, 205),4),
-            Label(window, f"Simulation Time: {self.simulation_time:.2f} seconds", 0.5, 0.1,self.font,(126, 161, 196, 255),2)           
+            Label(window, f"Simulation Time: {self.simulation_time:.2f} seconds", 0.5, 0.1,self.font,(126, 161, 196, 255),2),
+            Label(window, f"Time multiplier: x {self.time_multiplier:,}".replace(","," "), 0.5, 0.15,self.font,(126, 161, 196, 255),2)           
                        ]
         
 
         self.buttons = [
-            Button(self.window, 0.125, 0.0925, 0.1875, 0.075, "Menu", (75, 87, 102),self.font),
-            Button(self.window, 0.875, 0.0925, 0.1875, 0.055, "Reset Position", (75, 87, 102),self.font),
+            Button(self.window, 0.125, 0.0925, 0.1875, 0.075, "Menu", (255, 255, 255),self.font,opacity=200),
+            Button(self.window, 0.875, 0.0925, 0.1875, 0.055, "Restart", (255, 255, 255),self.font,opacity=200),
+            Button(self.window, 0.5, 0.0325, 0.0875, 0.055, "Pause", (255, 255, 255),self.font,opacity=200),
+            Button(self.window, 0.875, 0.1725, 0.1275, 0.055, "Reset Position", (255, 255, 255),self.font,opacity=200),
             ]
         self.objects = create_celestial_objects(CELESTIAL_PARAMETERS)
         background_image = pyglet.image.load("assets/textures/background.jpg")
@@ -220,9 +229,11 @@ class SimulationState(BaseState):
         pass
 
     def update(self,dt):
-       self.simulation_time += dt * self.time_multiplier
-       self.labels[1] = Label(self.window, f"Simulation Time: {self.simulation_time:.2f} seconds", 0.5, 0.1, self.font, (126, 161, 196, 255), 2)
-       physics.update_physics(self.objects,dt* self.time_multiplier)
+        if not self.isPaused:
+            self.simulation_time += dt * self.time_multiplier
+            physics.update_physics(self.objects,dt* self.time_multiplier)
+        self.labels[1] = Label(self.window, f"Simulation Time: {self.simulation_time/86400:.2f} jours", 0.5, 0.1, self.font, (126, 161, 196, 255), 2)
+        self.labels[2] = Label(self.window, f"Time multiplier: x {self.time_multiplier:,}".replace(","," "), 0.5, 0.15,self.font,(126, 161, 196, 255),2)
     def update_positions(self):
         for button in self.buttons:
             button.update_position()
@@ -233,24 +244,79 @@ class SimulationState(BaseState):
         self.translation_x = 0
         self.translation_y = 0
         self.zoom = 0
+    def restart(self):
+        self.reset_positions()
+        self.objects = None
+        self.objects = create_celestial_objects(CELESTIAL_PARAMETERS)
+        self.time_multiplier = 1
+        self.simulation_time=0
+
+
     def draw(self):
         render.draw_objects(self.window,self.labels,self.buttons, self.objects,self.rotation_x,self.rotation_y,self.rotation_z,self.translation_x,self.translation_y,self.zoom,self.background_texture)
+
     def on_mouse_press(self, x, y, button, modifiers):
+
         for btn in self.buttons:
             btn.click()
+
+
+
+    def modify_time_modifier(self,scroll_y):
+        sensibility = 10_000
+        self.time_multiplier += scroll_y*sensibility
+        if self.time_multiplier == 0:
+            self.time_multiplier=1
+        if self.time_multiplier!=1:
+            if self.time_multiplier%10!=0:
+                self.time_multiplier -= 1
+
+    
+    def pause(self):
+        for btn in self.buttons:
+            if btn.text == "Pause":
+                btn.text = "Resume"
+                btn.play_sound("normal")
+            elif btn.text == "Resume":
+                btn.text = "Pause"
+                btn.play_sound("normal")
+                
+        if self.isPaused:
+            self.isPaused=False
+        else:
+            self.isPaused=True
+
+        
     def on_mouse_released(self, x, y, button, modifiers):
         for btn in self.buttons:
             btn.unclick()
             if btn.contains_point(x, y):
+                    
                     if btn.text == "Menu":
                         btn.play_sound("menu")
                         self.switch_state(StartMenuState)
                         
+                    if btn.text == "Restart":
+                        btn.play_sound("normal")
+                        self.restart()
+
+                    if btn.text == "Pause" or btn.text == "Resume":
+                        self.pause()
+                    
                     if btn.text == "Reset Position":
                         btn.play_sound("normal")
                         self.reset_positions()
 
-                        
+
+
+        for obj in self.objects:
+            intersection,distance = intersect_ray_sphere(self.ray_origin,self.ray_direction,obj.position_simulation,obj.rayon_simulation)
+
+            if intersect and distance<closest_distance:
+                closest_distance=distance
+                closest_object=obj
+        if closest_object:
+            print(closest_object.name)
 
 
 

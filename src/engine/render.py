@@ -40,14 +40,18 @@ def draw_object_with_texture(window, obj):
     # Activez la texture de l'objet
     glEnable(GL_TEXTURE_2D)
     glBindTexture(GL_TEXTURE_2D, obj.texture.id)
-
     # Code pour dessiner l'objet avec sa texture
     # (par exemple, si c'est une sphère, vous utiliseriez gluSphere)
+    glPushMatrix()
+    glTranslatef(obj.position_simulation[0], obj.position_simulation[1], obj.position_simulation[2])
+    if hasattr(obj, "inclinaison"):
+        glRotatef(obj.inclinaison,1,0,0)
+    
+    glRotatef(obj.rotation_siderale_angle,*obj.rotation_direction)
+
     quadric = gluNewQuadric()
     gluQuadricTexture(quadric, GL_TRUE)
-    glPushMatrix()
-    glTranslatef(obj.position[0], obj.position[1], obj.position[2])
-    gluSphere(quadric, obj.size, 60, 18)
+    gluSphere(quadric, obj.rayon_simulation, 60, 18)
     glPopMatrix()
 
     # Désactivez la texture pour d'autres rendus
@@ -101,11 +105,14 @@ def draw_objects(window, labels, buttons, objects, rotation_x, rotation_y, rotat
     setup_3d_projection(window)
     glLoadIdentity()
     glTranslatef(0, 0, -75+zoom)  # Déplacez la caméra un peu plus loin
+
+
     glTranslatef(translation_x,translation_y,0)
+
+
     glRotatef(rotation_x, 1, 0, 0)  # Rotation autour de l'axe X
     glRotatef(rotation_y, 0, 1, 0)
     glRotatef(rotation_z, 0, 0, 1)
-    #glTranslatef(translation_y,translation_x,0)
 
     for obj in objects:
         draw_object_with_texture(window, obj)
