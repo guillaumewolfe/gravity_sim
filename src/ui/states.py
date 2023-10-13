@@ -261,11 +261,13 @@ class SimulationState(BaseState):
         pixel_data = (GLubyte*3)()
         glReadPixels(x,y,1,1,GL_RGB,GL_UNSIGNED_BYTE, pixel_data)
         pixel_color = [pixel_data[i]/255.0 for i in range(3)]
-        selected_object_index = int(pixel_color[0]*255)
+        spacing = 1/len(self.objects)
+        selected_object_index = round(pixel_color[0]/spacing)
         selected_object = self.objects[selected_object_index]
-        print(f"Selected object: {selected_object.name}")
+        print(f"Selected object: {selected_object.name}, Selected index :{selected_object_index} Pixel = {pixel_color}")
         glBindFramebuffer(GL_FRAMEBUFFER_EXT,0)
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
+        self.draw()
 
 
 

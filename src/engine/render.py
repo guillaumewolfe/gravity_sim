@@ -134,6 +134,7 @@ def draw_objects(window, labels, buttons, objects, rotation_x, rotation_y, rotat
     if selection_mode:
         frame_buffer.bind()
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
+        
 
 
     # Configuration pour le rendu 2D
@@ -156,8 +157,13 @@ def draw_objects(window, labels, buttons, objects, rotation_x, rotation_y, rotat
     glRotatef(rotation_y, 0, 1, 0)
     glRotatef(rotation_z, 0, 0, 1)
 
+
     for index,obj in enumerate(objects):
-        unique_color = (index/255,0,0)
+        if selection_mode:
+            spacing = 1/len(objects)
+            unique_color = (index*spacing,0,0)
+            print(f"Object : {obj.name} Color : {unique_color}")
+        else:unique_color=[0,0,0]
         draw_object_with_texture(window, obj,selection_mode,unique_color)
 
     # Configuration pour le rendu 2D pour dessiner les labels
