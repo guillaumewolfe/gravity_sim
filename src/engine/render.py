@@ -3,6 +3,38 @@ from pyglet.text import Label
 texture = pyglet.image.load('assets/textures/lunar.jpg').get_texture()
 import math
 
+class FrameBuffer:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+
+        # Generate frame buffer
+        self.fbo = GLuint()
+        glGenFramebuffers(1, self.fbo)
+        glBindFramebuffer(GL_FRAMEBUFFER, self.fbo)
+
+        # Generate texture
+        self.texture = GLuint()
+        glGenTextures(1, self.texture)
+        glBindTexture(GL_TEXTURE_2D, self.texture)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, None)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glBindTexture(GL_TEXTURE_2D, 0)
+
+        # Attach it to FBO
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, self.texture, 0)
+
+        # Unbind
+        glBindFramebuffer(GL_FRAMEBUFFER, 0)
+
+    def bind(self):
+        glBindFramebuffer(GL_FRAMEBUFFER, self.fbo)
+
+    def unbind(self):
+        glBindFramebuffer(GL_FRAMEBUFFER, 0)
+
+
 def setup_2d_projection(window):
     glDisable(GL_DEPTH_TEST)
     glViewport(0, 0, window.width, window.height)
@@ -36,12 +68,15 @@ def draw_sphere(window):
     # Désactiver la texture
     glDisable(GL_TEXTURE_2D)
 
-def draw_object_with_texture(window, obj):
+def draw_object_with_texture(window, obj,selection_mode=False,unique_color=None):
+    if selection_mode:
+        glColor3f(*unique_color)
+    else:
     # Activez la texture de l'objet
-    glEnable(GL_TEXTURE_2D)
-    glBindTexture(GL_TEXTURE_2D, obj.texture.id)
-    # Code pour dessiner l'objet avec sa texture
-    # (par exemple, si c'est une sphère, vous utiliseriez gluSphere)
+        glEnable(GL_TEXTURE_2D)
+        glBindTexture(GL_TEXTURE_2D, obj.texture.id)
+        # Code pour dessiner l'objet avec sa texture
+        # (par exemple, si c'est une sphère, vous utiliseriez gluSphere)
     glPushMatrix()
     glTranslatef(obj.position_simulation[0], obj.position_simulation[1], obj.position_simulation[2])
     if hasattr(obj, "inclinaison"):
@@ -54,8 +89,9 @@ def draw_object_with_texture(window, obj):
     gluSphere(quadric, obj.rayon_simulation, 60, 18)
     glPopMatrix()
 
-    # Désactivez la texture pour d'autres rendus
-    glDisable(GL_TEXTURE_2D)
+        # Désactivez la texture pour d'autres rendus
+    if not selection_mode:
+        glDisable(GL_TEXTURE_2D)
 
 def calculate_camera_vectors(rotation_x, rotation_y):
     # Supposons que les vecteurs sont à une distance fixe de la caméra (par exemple, 2 unités)
@@ -92,9 +128,15 @@ def set_background(window,background_texture):
 
 
 
-def draw_objects(window, labels, buttons, objects, rotation_x, rotation_y, rotation_z, translation_x,translation_y,zoom,background_texture):
+def draw_objects(window, labels, buttons, objects, rotation_x, rotation_y, rotation_z, translation_x,translation_y,zoom,background_texture,selection_mode=False,frame_buffer = None):
+    #FramerBuffer pour Selection
+    #if not hasattr(state,"f")
+    if selection_mode:
+        frame_buffer.bind()
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
+
+
     # Configuration pour le rendu 2D
-    camera_x, camera_y, camera_z = calculate_camera_vectors(rotation_x, rotation_y)
     setup_2d_projection(window)
 
     # Dessiner le fond d'écran 2D en premier
@@ -114,8 +156,9 @@ def draw_objects(window, labels, buttons, objects, rotation_x, rotation_y, rotat
     glRotatef(rotation_y, 0, 1, 0)
     glRotatef(rotation_z, 0, 0, 1)
 
-    for obj in objects:
-        draw_object_with_texture(window, obj)
+    for index,obj in enumerate(objects):
+        unique_color = (index/255,0,0)
+        draw_object_with_texture(window, obj,selection_mode,unique_color)
 
     # Configuration pour le rendu 2D pour dessiner les labels
     setup_2d_projection(window)
@@ -129,9 +172,13 @@ def draw_objects(window, labels, buttons, objects, rotation_x, rotation_y, rotat
     # Calculez les coordonnées des vecteurs dans l'espace de la caméra
 
     # Ajoutez les labels des vecteurs en bas à droite
+    camera_x, camera_y, camera_z = calculate_camera_vectors(rotation_x, rotation_y)
     label_x = Label(f'X: {camera_x:.2f}', font_name='Arial', font_size=12, x=window.width - 200, y=10, anchor_x='right', anchor_y='bottom', color=(255, 255, 255, 255))
     label_y = Label(f'Y: {camera_y:.2f}', font_name='Arial', font_size=12, x=window.width - 120, y=10, anchor_x='right', anchor_y='bottom', color=(255, 255, 255, 255))
     label_z = Label(f'Z: {camera_z:.2f}', font_name='Arial', font_size=12, x=window.width - 40, y=10, anchor_x='right', anchor_y='bottom', color=(255, 255, 255, 255))
     label_x.draw()
     label_y.draw()
     label_z.draw()
+
+    if selection_mode:
+        frame_buffer.unbind()

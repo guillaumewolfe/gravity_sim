@@ -203,6 +203,7 @@ class SimulationState(BaseState):
     def __init__(self,window):
         self.window = window
         super().__init__()
+        self.frame_buffer = render.FrameBuffer(*window.get_size())
         self.isPaused = False
         self.simulation_time = 0  # représente le temps écoulé en secondes (ou toute autre unité de temps que vous souhaitez utiliser)
         self.time_multiplier = 10_000
@@ -256,6 +257,17 @@ class SimulationState(BaseState):
         render.draw_objects(self.window,self.labels,self.buttons, self.objects,self.rotation_x,self.rotation_y,self.rotation_z,self.translation_x,self.translation_y,self.zoom,self.background_texture)
 
     def on_mouse_press(self, x, y, button, modifiers):
+        render.draw_objects(self.window,self.labels,self.buttons, self.objects,self.rotation_x,self.rotation_y,self.rotation_z,self.translation_x,self.translation_y,self.zoom,self.background_texture,selection_mode=True,frame_buffer=self.frame_buffer)
+        pixel_data = (GLubyte*3)()
+        glReadPixels(x,y,1,1,GL_RGB,GL_UNSIGNED_BYTE, pixel_data)
+        pixel_color = [pixel_data[i]/255.0 for i in range(3)]
+        selected_object_index = int(pixel_color[0]*255)
+        selected_object = self.objects[selected_object_index]
+        print(f"Selected object: {selected_object.name}")
+        glBindFramebuffer(GL_FRAMEBUFFER_EXT,0)
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
+
+
 
         for btn in self.buttons:
             btn.click()
@@ -306,20 +318,6 @@ class SimulationState(BaseState):
                     if btn.text == "Reset Position":
                         btn.play_sound("normal")
                         self.reset_positions()
-
-
-
-        for obj in self.objects:
-            intersection,distance = intersect_ray_sphere(self.ray_origin,self.ray_direction,obj.position_simulation,obj.rayon_simulation)
-
-            if intersect and distance<closest_distance:
-                closest_distance=distance
-                closest_object=obj
-        if closest_object:
-            print(closest_object.name)
-
-
-
 
 
 
