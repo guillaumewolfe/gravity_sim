@@ -71,12 +71,14 @@ def handle_input(window, current_state):
 
         if symbol == pyglet.window.key.LSHIFT or symbol == pyglet.window.key.RSHIFT:
             global isShiftPressed
+            print("Shift up")
             isShiftPressed = True
 
     @window.event
     def on_key_release(symbol, modifier):
         if symbol == pyglet.window.key.LSHIFT or symbol == pyglet.window.key.RSHIFT:
             global isShiftPressed
+            print("Shit down")
             isShiftPressed = False
 
         

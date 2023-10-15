@@ -37,6 +37,8 @@ class BaseState:
 
     def update(self,dt):
         pass
+    def draw(self):
+        pass
     def rotation(self, dx, dy,dz):
         # Mettez à jour les angles de rotation en fonction du mouvement de la souris
         sensitivity = 0.5
@@ -131,7 +133,7 @@ class StartMenuState(BaseState):
             StartMenuState.videoPlayer.loop = True
             video_duration = StartMenuState.videoPlayer.source.duration
             StartMenuState.videoPlayer.seek(video_duration/2) 
-            render.setup_2d_projection(self.window)  
+            self.setup_2d_projection()  
         StartMenuState.videoPlayer.play()
 
         if not self.video_texture:
@@ -145,18 +147,27 @@ class StartMenuState(BaseState):
             StartMenuState.musicPlayer.loop = True
             StartMenuState.musicPlayer.play()
 
-    def update(self,dt):
-        # Vérifiez si un bouton a été cliqué, etc.
-        pass
+
+    def setup_2d_projection(self):
+        glDisable(GL_DEPTH_TEST)
+        glViewport(0, 0, self.window.width, self.window.height)
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+        gluOrtho2D(0, self.window.width, 0, self.window.height)
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
+
+
     def update_positions(self):
         if self.video_texture:
             self.video_texture.blit(0,0)
-        for button in self.buttons:
-            button.update_position()
+        for btn in self.buttons:
+            btn.update_position()
+
 
     def draw(self):
         # Update "Start" button position
-        render.setup_2d_projection(self.window)
+        self.setup_2d_projection()
         self.update_positions()
         self.label_welcome.draw()
         for button in self.buttons:
@@ -235,9 +246,6 @@ class SimulationState(BaseState):
             physics.update_physics(self.objects,dt* self.time_multiplier)
         self.labels[1] = Label(self.window, f"Simulation Time: {self.simulation_time/86400:.2f} jours", 0.5, 0.1, self.font, (126, 161, 196, 255), 2)
         self.labels[2] = Label(self.window, f"Time multiplier: x {self.time_multiplier:,}".replace(","," "), 0.5, 0.15,self.font,(126, 161, 196, 255),2)
-    def update_positions(self):
-        for button in self.buttons:
-            button.update_position()
     def reset_positions(self):
         self.rotation_x = 0 
         self.rotation_y = 0 
@@ -320,17 +328,10 @@ class LoadingState(BaseState):
         self.window = window
         super().__init__()
         self.medias = {}
-
-        self.loading_video = pyglet.media.load('assets/animations/loading_dust.mp4')
-        self.labels = Label(window, 'Chargement...', 0.5, 0.1,"Open Sans",(255, 255, 255, 210),3)
         self.loading_animation = False
         self.loadingTime = 0
-        self.window.flip()
-        if self.loading_animation:
-            self.loadingTime = 2
-            self.initiate_loading_animation()
         self.load_media()
-        pyglet.clock.schedule_once(self.switch_to_menu,self.loadingTime)
+        self.switch_to_menu()
 
 
     
@@ -339,21 +340,6 @@ class LoadingState(BaseState):
         self.medias["background_music"] = pyglet.media.load('assets/sounds/music_background.mp3',streaming=False)
         global ressources
         ressources = self.medias
-
-    def initiate_loading_animation(self):
-        self.videoPlayer = pyglet.media.Player()
-        self.videoPlayer.queue(self.loading_video)
-        self.videoPlayer.loop = True
-
-        render.setup_2d_projection(self.window)
-        self.videoPlayer.play()
-    
-    def draw(self):
-        if self.loading_animation:
-            texture = self.videoPlayer.get_texture()
-            if texture:
-                texture.blit(0,0)
-        self.labels.draw()
 
     
     def switch_to_menu(self,dt=None):

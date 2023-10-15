@@ -34,14 +34,6 @@ class FrameBuffer:
     def unbind(self):
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
-def setup_2d_projection(window):
-    glDisable(GL_DEPTH_TEST)
-    glViewport(0, 0, window.width, window.height)
-    glMatrixMode(GL_PROJECTION)
-    glLoadIdentity()
-    gluOrtho2D(0, window.width, 0, window.height)
-    glMatrixMode(GL_MODELVIEW)
-    glLoadIdentity()
 
 class RenderTool:
     def __init__(self,window, labels, buttons, objects, rotation_x, rotation_y, rotation_z, translation_x,translation_y,zoom,backgroundTexture):
@@ -173,6 +165,7 @@ class RenderTool:
             gluQuadricTexture(quadric, GL_TRUE)
             gluSphere(quadric, obj.rayon_simulation, 60, 18)
             glPopMatrix()
+            glDisable(GL_TEXTURE_2D)
     
     def draw(self):
 
