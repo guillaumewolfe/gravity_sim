@@ -79,7 +79,7 @@ CELESTIAL_PARAMETERS = [
         "accel": [0, 0, 0],
         "inclinaison": 3.13,
         "rotation_siderale_angle": 0,
-        "rotation_siderale_vitesse": 1/9.93,
+        "rotation_siderale_vitesse": 0.0101,
         "rotation_siderale_direction": [0, 1, 0],
         "texture_path": "assets/textures/jupiter.jpg"
     },
@@ -93,7 +93,7 @@ CELESTIAL_PARAMETERS = [
         "accel": [0, 0, 0],
         "inclinaison": 26.73,
         "rotation_siderale_angle": 0,
-        "rotation_siderale_vitesse": 1/10.7,
+        "rotation_siderale_vitesse": 0.0093,
         "rotation_siderale_direction": [0, 1, 0],
         "texture_path": "assets/textures/saturn.jpg"
     },

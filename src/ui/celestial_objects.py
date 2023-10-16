@@ -26,6 +26,19 @@ class CelestialObject:
         self.position_history = []
         self.max_position_history = 500
         self.drawOrbitEnable = True
+        self.distance_list = []
+        self.demi_orbite = math.pi * SimulationScale.to_distance(real_distance)/1.25
+    
+    def update_distance_list(self):
+        if len(self.position_history)>2:
+            def distance(p1, p2):
+                return ((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2 + (p1[2] - p2[2])**2)**0.5
+        
+            self.distance_list = [distance(self.position_history[i], self.position_history[i+1]) for i in range(len(self.position_history)-1)]
+
+    def calculate_distance_parcourue(self):
+        if len(self.distance_list) == 0: return 0
+        return sum(self.distance_list)
 
 def create_celestial_objects(params_list):
     objects = []

@@ -14,10 +14,6 @@ from raycast import dot,intersect,get_normalized_coordinates,intersect_ray_spher
 
 ressources = {}
 
-
-
-
-
 class BaseState:
     def __init__(self):
         self.next_state = None
@@ -28,8 +24,8 @@ class BaseState:
         self.translation_x = 0
         self.zoom = 0
         self.buttons=[]
-        self.fade_duration = 1
-        self.fade_transition = FadeTransition(self.window,duration = self.fade_duration)
+        pyglet.font.add_file("assets/fonts/TiltNeon-Regular.ttf")
+        self.font="Tilt Neon"
     def enter(self):
         pass
     def on_mouse_released(self,x,y,pressed,modif,isAjusting = False):
@@ -60,13 +56,8 @@ class BaseState:
         if not ressources:
             ressources["background_video"] = pyglet.media.load('assets/animations/back.mp4')
             ressources["background_music"] = pyglet.media.load('assets/sounds/music_background.mp3',streaming=False)
+            ressources["font"] = font.add_file('assets/fonts/OpenSans-VariableFont_wdth,wght.ttf')
         return ressources
-
-    def transition_out(self):
-        self.fade_transition.start_fade("out")
-    def transition_in(self):
-        self.fade_transition.start_fade("in")
-
 
 
     def switch_state(self,NewState):
@@ -110,7 +101,6 @@ class StartMenuState(BaseState):
         self.background_video = self.medias["background_video"]
         self.background_music = self.medias["background_music"]
         self.video_texture = None
-        self.font="Open Sans"
         self.objects=[]
 
 
@@ -221,8 +211,6 @@ class SimulationState(BaseState):
         self.time_multiplier = 10_000
         self.time_multiplier = 1
         self.selected_object = None
-
-        self.font="Open Sans"
         self.labels = [
             Label(window, 'Simulation', 0.5, 0.9,self.font,(255, 255, 255, 205),4),
             Label(window, f"Simulation Time: {self.simulation_time:.2f} seconds", 0.5, 0.1,self.font,(126, 161, 196, 255),2),
