@@ -2,6 +2,7 @@ from pyglet.gl import *
 from pyglet.text import Label
 texture = pyglet.image.load('assets/textures/lunar.jpg').get_texture()
 import math
+from ctypes import byref
 
 class FrameBuffer:
     def __init__(self, width, height):
@@ -24,6 +25,17 @@ class FrameBuffer:
 
         # Attach it to FBO
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, self.texture, 0)
+
+        # Create the depth buffer
+        self.depth_buffer = GLuint()
+        glGenRenderbuffers(1, byref(self.depth_buffer))
+        glBindRenderbuffer(GL_RENDERBUFFER, self.depth_buffer)
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height)
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, self.depth_buffer)
+        
+        if glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE:
+            print("Failed to create framebuffer!")
+            return
 
         # Unbind
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
@@ -59,6 +71,10 @@ class RenderTool:
 
         #Status Conditions to False
         self.isSelected = False
+
+        #Temporaire
+        self.bg_texture1 = pyglet.image.load('assets/textures/background_alpha1.png').get_texture()
+        self.bg_texture2 = pyglet.image.load('assets/textures/background2.jpg').get_texture()
     
     def update(self,labels, buttons, objects, rotation_x, rotation_y, rotation_z, translation_x,translation_y,zoom):
         #Update des objets et cameras settings selon le changement fait dans l'état
@@ -122,6 +138,57 @@ class RenderTool:
         glEnd()
         glDisable(GL_TEXTURE_2D)
     
+    def set_background_test(self):
+        glEnable(GL_TEXTURE_2D)
+
+        rotation_offset_x = self.rotation_y*0.01
+        rotation_offset_y = -self.rotation_x*0.01
+
+
+
+        offset_x1 = self.translation_x * 0.01 + rotation_offset_x
+        offset_y1 = self.translation_y * 0.01 + rotation_offset_y
+
+        glBindTexture(GL_TEXTURE_2D, self.bg_texture2.id)
+        self.draw_quad_with_offset(offset_x1,offset_y1)
+
+        offset_x2 = self.translation_x * 0.05 + rotation_offset_x
+        offset_y2 = self.translation_y * 0.05 + rotation_offset_y
+
+        glBindTexture(GL_TEXTURE_2D, self.background_texture.id)
+        self.draw_quad_with_offset(offset_x2,offset_y2,60)
+
+        offset_x3 = self.translation_x * 0.06 + rotation_offset_x
+        offset_y3 = self.translation_y * 0.06 + rotation_offset_y
+
+        glBindTexture(GL_TEXTURE_2D, self.background_texture.id)
+        self.draw_quad_with_offset(offset_x3,offset_y3,1)
+
+
+
+        glDisable(GL_TEXTURE_2D)
+
+
+    def draw_quad_with_offset(self, offset_x, offset_y, zoom_factor=1.0):
+        # Calculate the zoomed dimensions
+        zoomed_width = self.window.width * zoom_factor
+        zoomed_height = self.window.height * zoom_factor
+
+        # Calculate the difference to adjust the vertices
+        diff_width = (self.window.width - zoomed_width) / 2
+        diff_height = (self.window.height - zoomed_height) / 2
+
+        glBegin(GL_QUADS)
+        glTexCoord2f(0, 0)
+        glVertex2f(diff_width + offset_x, diff_height + offset_y)
+        glTexCoord2f(1, 0)
+        glVertex2f(zoomed_width + offset_x, diff_height + offset_y)
+        glTexCoord2f(1, 1)
+        glVertex2f(zoomed_width + offset_x, zoomed_height + offset_y)
+        glTexCoord2f(0, 1)
+        glVertex2f(diff_width + offset_x, zoomed_height + offset_y)
+        glEnd()
+    
     def move_camera(self):
         glLoadIdentity()
         #Translation initiale + Zoom
@@ -149,7 +216,89 @@ class RenderTool:
         label_x.draw()
         label_y.draw()
         label_z.draw()
+
+    def selection_mode(self,x,y):
+
+        self.frameBuffer.bind()
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+        self.render_with_colors()
+
+        output_buffer = (GLubyte*3)()
+
+        glReadPixels(x,self.window.height-y,1,1,GL_RGB,GL_UNSIGNED_BYTE,output_buffer)
+
+        self.frameBuffer.unbind()
+        glClearColor(1,1,1, 1)
+        glColor3f(1,1,1)
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        self.draw()
+
+        color_id = (output_buffer[0],output_buffer[1],output_buffer[2])
+
+
+
+        if color_id[2]>200 : return None
+
+        selected_obj = self.get_object_by_color_id(color_id)
+
+        return selected_obj
     
+    def render_with_colors(self):
+        # Clear the buffer with the blue background color
+        glClearColor(0, 0, 1, 1)  # RGB for blue
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+
+        glDisable(GL_TEXTURE_2D)  # Ensure textures are off
+
+        # Setup 3D for drawing celestial objects
+        self.setup_3d_projection()
+
+        # Move the camera according to direction
+        self.move_camera()
+
+        # Now, for each object in your scene, set the color and draw it
+        for obj in self.objects:
+            # Extract the color_id (assuming it's in 0-255 range)
+            r, g, b = obj.color_id
+
+            # Convert the color to 0-1 range
+            r /= 255.0
+            g /= 255.0
+            b /= 255.0
+
+            # Set the color for the object
+            glColor3f(r, g, b)
+
+            # Draw the object using the same transformations but with the unique color
+            glPushMatrix()
+            glTranslatef(obj.position_simulation[0], obj.position_simulation[1], obj.position_simulation[2])
+            if hasattr(obj, "inclinaison"):
+                glRotatef(obj.inclinaison, 1, 0, 0)
+            glRotatef(obj.rotation_siderale_angle, *obj.rotation_direction)
+            quadric = gluNewQuadric()
+            gluSphere(quadric, obj.rayon_simulation, 60, 18)
+            glPopMatrix()
+
+        # Reset color to white (or whatever default you use)
+
+        # Re-enable lighting or other effects if you were using them
+        glEnable(GL_TEXTURE_2D)
+    
+    def is_color_close(self, color1, color2, threshold=10):
+        """Check if two colors are close based on a threshold."""
+        return all(abs(c1 - c2) <= threshold for c1, c2 in zip(color1, color2))
+
+    def get_object_by_color_id(self, color_id, threshold=10):
+        for obj in self.objects:
+            if self.is_color_close(obj.color_id, color_id, threshold):
+                return obj
+        return None
+
+
+
     def draw_celestial_objects(self):
         for obj in self.objects:
             glEnable(GL_TEXTURE_2D)
@@ -171,7 +320,7 @@ class RenderTool:
 
         #Setup 2D + Fond d'écran
         self.setup_2d_projection()
-        self.set_background()
+        self.set_background_test()
 
         #Setup 3D pour dessiner les objects celestes
         self.setup_3d_projection()
@@ -191,7 +340,4 @@ class RenderTool:
         self.draw_camera_coordinates()
 
 
-        
-
-    
-
+            

@@ -5,7 +5,7 @@ from objectCelesteData import CELESTIAL_PARAMETERS
 
 
 class CelestialObject:
-    def __init__(self, name, relation, real_position, real_radius, texture_path,position_simulation=None,rayon_simulation=None ,velocity=None, force=None, accel=None, weight=None,inclinaison=None,rotation_siderale_angle=None,rotation_siderale_vitesse=None,rotation_direction=None):
+    def __init__(self, name, relation, real_position, real_radius, texture_path,position_simulation=None,rayon_simulation=None ,velocity=None, force=None, accel=None, weight=None,inclinaison=None,rotation_siderale_angle=None,rotation_siderale_vitesse=None,rotation_direction=None,color_id = (0,0,0)):
         self.name = name
         self.real_position = real_position  # position en unités réelles
         self.relation = relation
@@ -21,12 +21,12 @@ class CelestialObject:
         self.rotation_siderale_angle = rotation_siderale_angle or 0
         self.rotation_siderale_vitesse = rotation_siderale_vitesse or 0
         self.rotation_direction = rotation_direction or [0,0,0]
-
+        self.color_id = color_id or (0,0,0)
 
 def create_celestial_objects(params_list):
     objects = []
     
-    for params in params_list:
+    for index,params in enumerate(params_list):
         # Déterminez la position réelle
         if params["relation"] == params["name"]:  # Si l'objet est son propre point de référence (comme le Soleil)
             real_position = [0, 0, 0]
@@ -55,14 +55,18 @@ def create_celestial_objects(params_list):
             rotation_siderale_vitesse=params["rotation_siderale_vitesse"],
             rotation_direction=params["rotation_siderale_direction"],
             position_simulation=position_simulation,
-            rayon_simulation=rayon_simulation
+            rayon_simulation=rayon_simulation,
+            color_id=generate_color_id(index)
         )
         
         objects.append(obj)
     return objects
 
 
-
+def generate_color_id(index):
+    r_val = (index//10)*25
+    g_val = (index%10)*25
+    return (r_val,g_val,0)
 
 
 distanceTerreSoleil = 149_597_870e3

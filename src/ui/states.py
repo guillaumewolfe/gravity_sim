@@ -218,12 +218,14 @@ class SimulationState(BaseState):
         self.simulation_time = 0  # représente le temps écoulé en secondes (ou toute autre unité de temps que vous souhaitez utiliser)
         self.time_multiplier = 10_000
         self.time_multiplier = 1
+        self.selected_object = None
 
         self.font="Open Sans"
         self.labels = [
             Label(window, 'Simulation', 0.5, 0.9,self.font,(255, 255, 255, 205),4),
             Label(window, f"Simulation Time: {self.simulation_time:.2f} seconds", 0.5, 0.1,self.font,(126, 161, 196, 255),2),
-            Label(window, f"Time multiplier: x {self.time_multiplier:,}".replace(","," "), 0.5, 0.15,self.font,(126, 161, 196, 255),2)           
+            Label(window, f"Time multiplier: x {self.time_multiplier:,}".replace(","," "), 0.5, 0.15,self.font,(126, 161, 196, 255),2),  
+            Label(self.window, f"Selected object: ", 0.5, 0.20,self.font,(126, 161, 196, 255),2)         
                        ]
         
 
@@ -234,6 +236,7 @@ class SimulationState(BaseState):
             Button(self.window, 0.875, 0.1725, 0.1275, 0.055, "Reset Position", (255, 255, 255),self.font,opacity=200),
             ]
         self.objects = create_celestial_objects(CELESTIAL_PARAMETERS)
+        for obj in self.objects:print(f"{obj.name} : {obj.color_id}")
         background_image = pyglet.image.load("assets/textures/background.jpg")
         self.background_texture = background_image.get_texture()
         self.renderTool = render.RenderTool(window,self.labels,self.buttons,self.objects,self.rotation_x,self.rotation_y,self.rotation_z,self.translation_x,self.translation_y,self.zoom,self.background_texture)
@@ -241,11 +244,16 @@ class SimulationState(BaseState):
         pass
 
     def update(self,dt):
+        if self.selected_object:
+            text = self.selected_object.name
+        else:
+            text = "None"
         if not self.isPaused:
             self.simulation_time += dt * self.time_multiplier
             physics.update_physics(self.objects,dt* self.time_multiplier)
         self.labels[1] = Label(self.window, f"Simulation Time: {self.simulation_time/86400:.2f} jours", 0.5, 0.1, self.font, (126, 161, 196, 255), 2)
         self.labels[2] = Label(self.window, f"Time multiplier: x {self.time_multiplier:,}".replace(","," "), 0.5, 0.15,self.font,(126, 161, 196, 255),2)
+        self.labels[3] = Label(self.window, f"Selected object: {text}", 0.5, 0.20,self.font,(126, 161, 196, 255),2)
     def reset_positions(self):
         self.rotation_x = 0 
         self.rotation_y = 0 
@@ -260,10 +268,11 @@ class SimulationState(BaseState):
         self.time_multiplier = 1
         self.simulation_time=0
 
-
+    def update_render_tool(self):
+        self.renderTool.update(self.labels,self.buttons,self.objects,self.rotation_x,self.rotation_y,self.rotation_z,self.translation_x,self.translation_y,self.zoom)
     def draw(self):
         #On update les valeurs
-        self.renderTool.update(self.labels,self.buttons,self.objects,self.rotation_x,self.rotation_y,self.rotation_z,self.translation_x,self.translation_y,self.zoom)
+        self.update_render_tool()
         #On dessine
         self.renderTool.draw()
         
@@ -301,6 +310,9 @@ class SimulationState(BaseState):
 
         
     def on_mouse_released(self, x, y, button, modifiers):
+        self.update_render_tool()
+        self.selected_object = self.renderTool.selection_mode(x,y)
+        if self.selected_object: print(self.selected_object.name)
         for btn in self.buttons:
             btn.unclick()
             if btn.contains_point(x, y):
