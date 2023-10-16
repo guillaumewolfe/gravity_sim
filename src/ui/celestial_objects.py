@@ -70,14 +70,14 @@ def generate_color_id(index):
 
 
 distanceTerreSoleil = 149_597_870e3
-facteur = 7.5
+facteur = 25
 SCALE = distanceTerreSoleil/facteur
 
 
 class SimulationScale:
     DISTANCE_SCALE = SCALE
-    SIZE_MIN = 0.5  # Rayon minimum dans la simulation
-    SIZE_MAX = 2    # Rayon maximum (pour le Soleil)
+    SIZE_MIN = 1  # Rayon minimum dans la simulation
+    SIZE_MAX = 5   # Rayon maximum (pour le Soleil)
 
     @classmethod
     def to_distance(cls, real_distance):
@@ -85,9 +85,12 @@ class SimulationScale:
 
     @classmethod
     def to_size(cls, real_radius):
+        if real_radius == 696_340e3:
+            return 7
+        
         # Mise à l'échelle linéaire
-        max_radius_real = 696_340e3  # Rayon du Soleil en km
-        min_radius_real = 2439.7e3  # Supposons qu'il s'agisse d'un rayon minimum réaliste pour un petit objet
+        max_radius_real = 69911e3  # Rayon de jupyter
+        min_radius_real = 1737.5e3  # Supposons qu'il s'agisse d'un rayon minimum réaliste pour un petit objet
 
         # Interpolation linéaire entre SIZE_MIN et SIZE_MAX
         normalized_size = cls.SIZE_MIN + (real_radius - min_radius_real) / (max_radius_real - min_radius_real) * (cls.SIZE_MAX - cls.SIZE_MIN)

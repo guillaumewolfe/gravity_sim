@@ -21,7 +21,7 @@ CELESTIAL_PARAMETERS = [
         "weight": 5.972e24,  # en kg
         "velocity": [0, 29.78e3, 0],  # en m/s, supposons que la vitesse soit dans la direction x pour simplifier
         "accel": [0, 0, 0],
-        "inclinaison": 23.5,
+        "inclinaison": 0,#23.5
         "rotation_siderale_angle": 0,
         "rotation_siderale_vitesse": 360/86400,
         "rotation_siderale_direction": [0,1,0],
@@ -124,6 +124,20 @@ CELESTIAL_PARAMETERS = [
         "rotation_siderale_vitesse": 1/16,
         "rotation_siderale_direction": [0, 1, 0],
         "texture_path": "assets/textures/neptune.jpg"
+    },
+    {
+        "name": "Lune",
+        "relation": "Terre",
+        "real_distance": 384_400e3,  # en mètres
+        "real_radius": 1737.5e3,  # en mètres
+        "weight": 7.342e22,  # en kg
+        "velocity": [0, 29.78e3, 1.022e3],  # en m/s, supposons que la vitesse soit dans la direction x pour simplifier
+        "accel": [0, 0, 0],
+        "inclinaison": 0,
+        "rotation_siderale_angle": 0,
+        "rotation_siderale_vitesse": 0,
+        "rotation_siderale_direction": [0,0,0],
+        "texture_path": "assets/textures/lunar.jpg"
     }
 ]
 

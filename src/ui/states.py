@@ -278,7 +278,8 @@ class SimulationState(BaseState):
         
 
     def on_mouse_press(self, x, y, button, modifiers):
-
+        self.update_render_tool()
+        self.selected_object = self.renderTool.selection_mode(x,y)
         for btn in self.buttons:
             btn.click()
 
@@ -310,9 +311,7 @@ class SimulationState(BaseState):
 
         
     def on_mouse_released(self, x, y, button, modifiers):
-        self.update_render_tool()
-        self.selected_object = self.renderTool.selection_mode(x,y)
-        if self.selected_object: print(self.selected_object.name)
+        #if self.selected_object: print(self.selected_object.name)
         for btn in self.buttons:
             btn.unclick()
             if btn.contains_point(x, y):

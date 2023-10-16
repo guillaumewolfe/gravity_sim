@@ -35,7 +35,7 @@ class FrameBuffer:
         
         if glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE:
             print("Failed to create framebuffer!")
-            return
+
 
         # Unbind
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
@@ -45,6 +45,17 @@ class FrameBuffer:
 
     def unbind(self):
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
+    
+    def draw(self, x, y):
+        glEnable(GL_TEXTURE_2D)
+        glBindTexture(GL_TEXTURE_2D, self.texture)
+        glBegin(GL_QUADS)
+        glTexCoord2f(0, 0); glVertex2f(x, y)
+        glTexCoord2f(1, 0); glVertex2f(x + self.width, y)
+        glTexCoord2f(1, 1); glVertex2f(x + self.width, y + self.height)
+        glTexCoord2f(0, 1); glVertex2f(x, y + self.height)
+        glEnd()
+        glDisable(GL_TEXTURE_2D)
 
 
 class RenderTool:
@@ -63,7 +74,7 @@ class RenderTool:
         self.translation_x = translation_x
         self.translation_y = translation_y
         self.zoom = zoom
-        self.distance_initiale = -75
+        self.distance_initiale = -100
 
         #Initiate only
         self.background_texture = backgroundTexture
@@ -227,15 +238,15 @@ class RenderTool:
 
         output_buffer = (GLubyte*3)()
 
-        glReadPixels(x,self.window.height-y,1,1,GL_RGB,GL_UNSIGNED_BYTE,output_buffer)
+        glReadPixels(x,y,1,1,GL_RGB,GL_UNSIGNED_BYTE,output_buffer)
 
         self.frameBuffer.unbind()
         glClearColor(1,1,1, 1)
         glColor3f(1,1,1)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        self.draw()
 
         color_id = (output_buffer[0],output_buffer[1],output_buffer[2])
+        print(color_id)
 
 
 
@@ -245,13 +256,11 @@ class RenderTool:
 
         return selected_obj
     
+        
     def render_with_colors(self):
         # Clear the buffer with the blue background color
         glClearColor(0, 0, 1, 1)  # RGB for blue
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-
-
-        glDisable(GL_TEXTURE_2D)  # Ensure textures are off
 
         # Setup 3D for drawing celestial objects
         self.setup_3d_projection()
@@ -271,21 +280,20 @@ class RenderTool:
 
             # Set the color for the object
             glColor3f(r, g, b)
-
             # Draw the object using the same transformations but with the unique color
             glPushMatrix()
             glTranslatef(obj.position_simulation[0], obj.position_simulation[1], obj.position_simulation[2])
             if hasattr(obj, "inclinaison"):
                 glRotatef(obj.inclinaison, 1, 0, 0)
-            glRotatef(obj.rotation_siderale_angle, *obj.rotation_direction)
+            #glRotatef(obj.rotation_siderale_angle, *obj.rotation_direction)
             quadric = gluNewQuadric()
             gluSphere(quadric, obj.rayon_simulation, 60, 18)
             glPopMatrix()
 
-        # Reset color to white (or whatever default you use)
 
-        # Re-enable lighting or other effects if you were using them
-        glEnable(GL_TEXTURE_2D)
+
+   
+
     
     def is_color_close(self, color1, color2, threshold=10):
         """Check if two colors are close based on a threshold."""
@@ -338,6 +346,9 @@ class RenderTool:
 
         #Dessiner les coordonnées de la caméra
         self.draw_camera_coordinates()
+
+        #self.frameBuffer.draw(0,0)
+
 
 
             
