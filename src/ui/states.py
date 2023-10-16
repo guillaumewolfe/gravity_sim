@@ -47,7 +47,7 @@ class BaseState:
         self.rotation_z += dz * sensitivity   
     def translation(self, dx, dy):
         # Mettez à jour les angles de rotation en fonction du mouvement de la souris
-        sensitivity = 0.01
+        sensitivity = 0.05
         self.translation_x += dy * sensitivity
         self.translation_y += dx * sensitivity  
     def zoomer(self, zoom):
@@ -80,6 +80,8 @@ class BaseState:
     def close_app(self):
         pyglet.app.exit()
     def pause(self):
+        pass
+    def modify_time_modifier(self):
         pass
 
     def on_mouse_press(self,x,y,button,modifiers):

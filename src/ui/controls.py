@@ -4,12 +4,14 @@ from pyglet.gl import *
 import states
 
 isShiftPressed = False
-
+isMousePressed = False
 
 
 def handle_input(window, current_state):
     @window.event
     def on_mouse_press(x, y, button, modifiers):
+        global isMousePressed
+        isMousePressed = True
         current_state.on_mouse_press(x, y, button, modifiers)
 
 
@@ -19,6 +21,8 @@ def handle_input(window, current_state):
 
     @window.event
     def on_mouse_release(x, y, button, modifiers):
+        global isMousePressed
+        isMousePressed = False
         current_state.on_mouse_released(x, y, button, modifiers)
         # ... (logique de gestion des entrées) ...
 
@@ -44,8 +48,9 @@ def handle_input(window, current_state):
                 btn.hover = False
     @window.event
     def on_mouse_drag(x, y, dx, dy, button, modifiers):
+        global scroll_z
         if button == pyglet.window.mouse.RIGHT:
-            current_state.rotation(dx, 0, dy)
+            current_state.rotation(dx, dy, 0)
         if button == pyglet.window.mouse.LEFT:
             current_state.translation(dy, dx) 
 
@@ -53,6 +58,7 @@ def handle_input(window, current_state):
     def on_mouse_scroll(x, y, scroll_x, scroll_y):
 
         global isShiftPressed
+        global isMousePressed
         if isShiftPressed:
             print()
             current_state.modify_time_modifier(scroll_y) 

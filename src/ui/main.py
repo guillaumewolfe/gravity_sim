@@ -14,10 +14,13 @@ font.add_file('assets/fonts/OpenSans-VariableFont_wdth,wght.ttf')
 screen = pyglet.canvas.get_display().get_default_screen()
 WIDTH, HEIGHT = 1820,980
 pyglet.options['vsync'] = False
-window = pyglet.window.Window(WIDTH, HEIGHT, "Simulation", resizable=True,visible=False)
+config = pyglet.gl.Config(sample_buffer=1,samples=4)
+window = pyglet.window.Window(WIDTH, HEIGHT, "Simulation", resizable=True,visible=False,config=config)
 window.set_location((screen.width - WIDTH) // 2, (screen.height - HEIGHT) // 2)
 glClearColor(1,1,1, 1)
 glEnable(GL_DEPTH_TEST)
+glEnable(GL_MULTISAMPLE)
+
 
 @window.event
 def on_draw():

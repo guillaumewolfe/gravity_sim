@@ -42,15 +42,20 @@ def update_positions(obj, dt):
     # mise à jour de la position de simulation (mise à l'échelle)
     obj.position_simulation = [CO.SimulationScale.to_distance(coord) for coord in obj.real_position]
 
+    if len(obj.position_history) >= obj.max_position_history:
+        obj.position_history.pop(0)
+    obj.position_history.append(obj.position_simulation)
+
 def update_rotation(obj,dt):
     obj.rotation_siderale_angle += obj.rotation_siderale_vitesse*dt
     obj.rotation_siderale_angle = obj.rotation_siderale_angle%360
+
     
 def update_physics(objects, dt):
 
     for obj in objects:
         update_rotation(obj,dt)
-        #if obj.name=="Soleil": print(obj.rotation_siderale_angle)
+        #if obj.name=="Terre": print(len(obj.position_history))
         if obj.name!=obj.relation:
             #if obj.name=="Soleil": print(obj.rotation_siderale_angle)
             update_accel(obj,objects,dt)

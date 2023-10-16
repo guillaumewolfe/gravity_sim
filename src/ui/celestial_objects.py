@@ -5,7 +5,7 @@ from objectCelesteData import CELESTIAL_PARAMETERS
 
 
 class CelestialObject:
-    def __init__(self, name, relation, real_position, real_radius, texture_path,position_simulation=None,rayon_simulation=None ,velocity=None, force=None, accel=None, weight=None,inclinaison=None,rotation_siderale_angle=None,rotation_siderale_vitesse=None,rotation_direction=None,color_id = (0,0,0)):
+    def __init__(self, name, relation, real_position, real_radius, texture_path,real_distance = None,position_simulation=None,rayon_simulation=None ,velocity=None, force=None, accel=None, weight=None,inclinaison=None,rotation_siderale_angle=None,rotation_siderale_vitesse=None,rotation_direction=None,color_id = (0,0,0)):
         self.name = name
         self.real_position = real_position  # position en unités réelles
         self.relation = relation
@@ -15,6 +15,7 @@ class CelestialObject:
         self.accel = accel or [0, 0, 0]
         self.weight = weight or 0
         self.real_radius = real_radius  # rayon en unités réelles
+        self.real_distance = real_distance or 0
         self.position_simulation = position_simulation or [0,0,0]
         self.rayon_simulation = rayon_simulation or 0.0001
         self.inclinaison = inclinaison or 0
@@ -22,6 +23,9 @@ class CelestialObject:
         self.rotation_siderale_vitesse = rotation_siderale_vitesse or 0
         self.rotation_direction = rotation_direction or [0,0,0]
         self.color_id = color_id or (0,0,0)
+        self.position_history = []
+        self.max_position_history = 500
+        self.drawOrbitEnable = True
 
 def create_celestial_objects(params_list):
     objects = []
@@ -50,6 +54,7 @@ def create_celestial_objects(params_list):
             velocity=params["velocity"],
             weight=params["weight"],
             accel=params["accel"],
+            real_distance=params["real_distance"],
             inclinaison=params["inclinaison"],
             rotation_siderale_angle=params["rotation_siderale_angle"],
             rotation_siderale_vitesse=params["rotation_siderale_vitesse"],
@@ -77,7 +82,7 @@ SCALE = distanceTerreSoleil/facteur
 class SimulationScale:
     DISTANCE_SCALE = SCALE
     SIZE_MIN = 1  # Rayon minimum dans la simulation
-    SIZE_MAX = 5   # Rayon maximum (pour le Soleil)
+    SIZE_MAX = 4   # Rayon maximum (pour le Soleil)
 
     @classmethod
     def to_distance(cls, real_distance):
@@ -86,7 +91,7 @@ class SimulationScale:
     @classmethod
     def to_size(cls, real_radius):
         if real_radius == 696_340e3:
-            return 7
+            return 6
         
         # Mise à l'échelle linéaire
         max_radius_real = 69911e3  # Rayon de jupyter

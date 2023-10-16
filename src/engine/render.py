@@ -1,62 +1,7 @@
 from pyglet.gl import *
 from pyglet.text import Label
-texture = pyglet.image.load('assets/textures/lunar.jpg').get_texture()
 import math
-from ctypes import byref
-
-class FrameBuffer:
-    def __init__(self, width, height):
-        self.width = width
-        self.height = height
-
-        # Generate frame buffer
-        self.fbo = GLuint()
-        glGenFramebuffers(1, self.fbo)
-        glBindFramebuffer(GL_FRAMEBUFFER, self.fbo)
-
-        # Generate texture
-        self.texture = GLuint()
-        glGenTextures(1, self.texture)
-        glBindTexture(GL_TEXTURE_2D, self.texture)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, None)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        glBindTexture(GL_TEXTURE_2D, 0)
-
-        # Attach it to FBO
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, self.texture, 0)
-
-        # Create the depth buffer
-        self.depth_buffer = GLuint()
-        glGenRenderbuffers(1, byref(self.depth_buffer))
-        glBindRenderbuffer(GL_RENDERBUFFER, self.depth_buffer)
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height)
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, self.depth_buffer)
-        
-        if glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE:
-            print("Failed to create framebuffer!")
-
-
-        # Unbind
-        glBindFramebuffer(GL_FRAMEBUFFER, 0)
-
-    def bind(self):
-        glBindFramebuffer(GL_FRAMEBUFFER, self.fbo)
-
-    def unbind(self):
-        glBindFramebuffer(GL_FRAMEBUFFER, 0)
-    
-    def draw(self, x, y):
-        glEnable(GL_TEXTURE_2D)
-        glBindTexture(GL_TEXTURE_2D, self.texture)
-        glBegin(GL_QUADS)
-        glTexCoord2f(0, 0); glVertex2f(x, y)
-        glTexCoord2f(1, 0); glVertex2f(x + self.width, y)
-        glTexCoord2f(1, 1); glVertex2f(x + self.width, y + self.height)
-        glTexCoord2f(0, 1); glVertex2f(x, y + self.height)
-        glEnd()
-        glDisable(GL_TEXTURE_2D)
-
+from engine_tools.FrameBuffer import FrameBuffer
 
 class RenderTool:
     def __init__(self,window, labels, buttons, objects, rotation_x, rotation_y, rotation_z, translation_x,translation_y,zoom,backgroundTexture):
@@ -74,7 +19,11 @@ class RenderTool:
         self.translation_x = translation_x
         self.translation_y = translation_y
         self.zoom = zoom
-        self.distance_initiale = -100
+
+        self.translation_initiale = (0, 0,-200)
+        self.rotation_initiale = (0,100, 10.5)
+        
+        
 
 
         #Initiate only
@@ -177,7 +126,7 @@ class RenderTool:
         offset_y3 = self.translation_y * 0.06 + rotation_offset_y
 
         glBindTexture(GL_TEXTURE_2D, self.background_texture.id)
-        self.draw_quad_with_offset(offset_x3,offset_y3,1)
+        self.draw_quad_with_offset(offset_x3,offset_y3,2)
 
 
 
@@ -216,16 +165,17 @@ class RenderTool:
         glLoadIdentity()
         #Translation initiale + Zoom
         #Translation selon le mouvement
-        glTranslatef(0, 0, self.distance_initiale+self.zoom)
         glTranslatef(self.translation_x,self.translation_y,0)
-        glRotatef(self.rotation_x, 1, 0, 0)  # Rotation autour de l'axe X
-        glRotatef(self.rotation_y, 0, 1, 0)
-        glRotatef(self.rotation_z, 0, 0, 1)
+        glTranslatef(self.translation_initiale[0], self.translation_initiale[1], self.translation_initiale[2]+self.zoom)
+        glRotatef(0, 1, 0, 0)  # Rotation autour de l'axe X
+        glRotatef(self.rotation_y+self.rotation_initiale[1], 0, 1, 0)
+        glRotatef(self.rotation_x+self.rotation_initiale[2], 0, 0, 1)
+    
 
         glTranslatef(- x_followObject,- y_followObject,-z_followObject)
 
         #Rotation selon le mouvement
-    
+
     def draw_pyglet_objects(self):
         for label in self.labels:
             label.draw()
@@ -319,6 +269,26 @@ class RenderTool:
         return None
 
 
+    def draw_planet_path(self):
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+        #glEnable(GL_LINE_SMOOTH)
+        #glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
+
+        for obj in self.objects:
+            if obj.drawOrbitEnable and len(obj.position_history) > 2:
+                glLineWidth(0.5) 
+                glBegin(GL_LINE_STRIP)
+                path_length = len(obj.position_history)  # Define the path_length here
+                for index, position in enumerate(obj.position_history):
+                    alpha = 0.75*(index / (path_length - 1))
+                    glColor4f(1, 1, 1, alpha)
+                    glVertex3f(position[0], position[1], position[2])
+                glEnd()  # Ensure glEnd is called for each object's path
+
+        glColor4f(1, 1, 1, 1)  # Reset color
+        glLineWidth(1)         # Reset line width
 
     def draw_celestial_objects(self):
         for obj in self.objects:
@@ -333,7 +303,7 @@ class RenderTool:
 
             quadric = gluNewQuadric()
             gluQuadricTexture(quadric, GL_TRUE)
-            gluSphere(quadric, obj.rayon_simulation, 60, 18)
+            gluSphere(quadric, obj.rayon_simulation, 100, 30)
             glPopMatrix()
             glDisable(GL_TEXTURE_2D)
     
@@ -350,6 +320,9 @@ class RenderTool:
 
         #Dessiner les objects
         self.draw_celestial_objects()
+
+        #Path of objects:
+        self.draw_planet_path()
 
         #Remise en 2D
         self.setup_2d_projection()

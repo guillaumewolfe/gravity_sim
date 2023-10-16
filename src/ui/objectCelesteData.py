@@ -19,7 +19,7 @@ CELESTIAL_PARAMETERS = [
         "real_distance": 149_597_870e3,  # en mètres
         "real_radius": 6371e3,  # en mètres
         "weight": 5.972e24,  # en kg
-        "velocity": [0, 29.78e3, 0],  # en m/s, supposons que la vitesse soit dans la direction x pour simplifier
+        "velocity": [0, 0, -29.78e3],  # en m/s, supposons que la vitesse soit dans la direction x pour simplifier
         "accel": [0, 0, 0],
         "inclinaison": 0,#23.5
         "rotation_siderale_angle": 0,
@@ -33,7 +33,7 @@ CELESTIAL_PARAMETERS = [
         "real_distance": 225_000_000e3,  # en mètres
         "real_radius": 3390e3,  # en mètres
         "weight": 6.417e23,  # en kg
-        "velocity": [0, 24e3, 0],  # en m/s, supposons que la vitesse soit dans la direction x pour simplifier
+        "velocity": [0, 0, -24e3],  # en m/s, supposons que la vitesse soit dans la direction x pour simplifier
         "accel": [0, 0, 0],
         "inclinaison": 25.19,
         "rotation_siderale_angle": 0,
@@ -47,7 +47,7 @@ CELESTIAL_PARAMETERS = [
         "real_distance": 57_909_175e3,
         "real_radius": 2439.7e3,
         "weight": 3.301e23,
-        "velocity": [0, 47.87e3, 0],
+        "velocity": [0, 0, -47.87e3],
         "accel": [0, 0, 0],
         "inclinaison": 0.034,
         "rotation_siderale_angle": 0,
@@ -61,7 +61,7 @@ CELESTIAL_PARAMETERS = [
         "real_distance": 108_208_930e3,
         "real_radius": 6051.8e3,
         "weight": 4.867e24,
-        "velocity": [0, 35.02e3, 0],
+        "velocity": [0, 0, -35.02e3],
         "accel": [0, 0, 0],
         "inclinaison": 177.4,
         "rotation_siderale_angle": 0,
@@ -75,7 +75,7 @@ CELESTIAL_PARAMETERS = [
         "real_distance": 778_340_821e3,
         "real_radius": 69911e3,
         "weight": 1.898e27,
-        "velocity": [0, 13.07e3, 0],
+        "velocity": [0, 0, -13.07e3],
         "accel": [0, 0, 0],
         "inclinaison": 3.13,
         "rotation_siderale_angle": 0,
@@ -89,7 +89,7 @@ CELESTIAL_PARAMETERS = [
         "real_distance": 1_426_666_422e3,
         "real_radius": 58232e3,
         "weight": 5.683e26,
-        "velocity": [0, 9.68e3, 0],
+        "velocity": [0, 0, -9.68e3],
         "accel": [0, 0, 0],
         "inclinaison": 26.73,
         "rotation_siderale_angle": 0,
@@ -103,7 +103,7 @@ CELESTIAL_PARAMETERS = [
         "real_distance": 2_870_658_186e3,
         "real_radius": 25362e3,
         "weight": 8.681e25,
-        "velocity": [0, 6.8e3, 0],
+        "velocity": [0, 0, -6.8e3],
         "accel": [0, 0, 0],
         "inclinaison": 97.77,
         "rotation_siderale_angle": 0,
@@ -117,7 +117,7 @@ CELESTIAL_PARAMETERS = [
         "real_distance": 4_498_396_441e3,
         "real_radius": 24622e3,
         "weight": 1.024e26,
-        "velocity": [0, 5.43e3, 0],
+        "velocity": [0, 0, -5.43e3],
         "accel": [0, 0, 0],
         "inclinaison": 28.32,
         "rotation_siderale_angle": 0,
