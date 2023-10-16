@@ -32,7 +32,7 @@ class BaseState:
         self.fade_transition = FadeTransition(self.window,duration = self.fade_duration)
     def enter(self):
         pass
-    def on_mouse_released(self,x,y,pressed,modif):
+    def on_mouse_released(self,x,y,pressed,modif,isAjusting = False):
         pass
 
     def update(self,dt):
@@ -178,7 +178,7 @@ class StartMenuState(BaseState):
     def on_mouse_press(self, x, y, button, modifiers):
         for btn in self.buttons:
             btn.click()
-    def on_mouse_released(self, x, y, button, modifiers):
+    def on_mouse_released(self, x, y, button, modifiers,isAjusting):
         for btn in self.buttons:
             btn.unclick()
             if btn.contains_point(x, y):
@@ -273,6 +273,7 @@ class SimulationState(BaseState):
 
     def update_render_tool(self):
         self.renderTool.update(self.labels,self.buttons,self.objects,self.rotation_x,self.rotation_y,self.rotation_z,self.translation_x,self.translation_y,self.zoom)
+        self.renderTool.selectedObject = self.selected_object
     def draw(self):
         #On update les valeurs
         self.update_render_tool()
@@ -320,7 +321,7 @@ class SimulationState(BaseState):
             self.isPaused=True
 
         
-    def on_mouse_released(self, x, y, button, modifiers):
+    def on_mouse_released(self, x, y, button, modifiers,isAjusting):
         buttonClicked = False
 
         for btn in self.buttons:
@@ -350,7 +351,7 @@ class SimulationState(BaseState):
                     self.reset_positions()
                     self.renderTool.followObjectEnabled = True
                     self.renderTool.followObject = self.renderTool.selectedObject
-        if not buttonClicked:
+        if not buttonClicked and not isAjusting:
             self.check_selection(x,y)
                         
 

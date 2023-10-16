@@ -35,6 +35,9 @@ class RenderTool:
         self.followObjectEnabled = False
         self.followObject = None
 
+        #Highligh
+        self.frame_counter = 0
+
 
         #Temporaire
         self.bg_texture1 = pyglet.image.load('assets/textures/background_alpha1.png').get_texture()
@@ -290,6 +293,44 @@ class RenderTool:
         glColor4f(1, 1, 1, 1)  # Reset color
         glLineWidth(1)         # Reset line width
 
+
+    def draw_highlight(self, obj):
+        scale_factor = 0.5 * math.sin(2 * math.pi * self.frame_counter / 90) + 0.5  # This oscillates between 0 and 1 over 60 frames
+        scale = obj.rayon_simulation *1.01 + 2 * scale_factor 
+        position = obj.position_simulation
+        """Draw a semi-transparent sphere around the selected object."""
+        # Color (47,233,240) with 0.5 transparency
+
+
+        color_factor = 0.5 * math.sin(2 * math.pi * self.frame_counter / 90+math.pi/2) + 0.5  # This oscillates between 0 and 1 over 90 frames
+        colors = (
+            255 + (47 - 255) * color_factor,
+            255 + (233 - 255) * color_factor,
+            255 + (240 - 255) * color_factor
+        )
+
+
+        glColor4f(colors[0]/255, colors[1]/255, colors[2]/255, 0.125)
+        
+
+        glPushMatrix()
+        
+        # Translate to the object's position
+        glTranslatef(position[0], position[1], position[2])
+        
+        # Scale if necessary. You can adjust or remove this line depending on your needs.
+        glScalef(scale, scale, scale)
+        
+        # Drawing the sphere (assuming you have the glu library with pyglet)
+        quad = gluNewQuadric()
+        gluSphere(quad, 1.0, 60, 60)
+        gluDeleteQuadric(quad)
+
+        glPopMatrix()
+        glColor4f(1, 1, 1, 1)
+
+
+
     def draw_celestial_objects(self):
         for obj in self.objects:
             glEnable(GL_TEXTURE_2D)
@@ -306,6 +347,7 @@ class RenderTool:
             gluSphere(quadric, obj.rayon_simulation, 100, 30)
             glPopMatrix()
             glDisable(GL_TEXTURE_2D)
+            
     
     def draw(self):
 
@@ -321,8 +363,12 @@ class RenderTool:
         #Dessiner les objects
         self.draw_celestial_objects()
 
+         #Highlight selected object
+        if self.selectedObject:
+            self.draw_highlight(self.selectedObject)
         #Path of objects:
         self.draw_planet_path()
+
 
         #Remise en 2D
         self.setup_2d_projection()
@@ -334,6 +380,13 @@ class RenderTool:
         self.draw_camera_coordinates()
 
         #self.frameBuffer.draw(0,0)
+
+        self.frame_counter+=1
+        if self.frame_counter>90:
+            self.frame_counter = 0
+
+
+
 
 
 
