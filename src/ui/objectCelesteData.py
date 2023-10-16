@@ -67,7 +67,7 @@ CELESTIAL_PARAMETERS = [
         "rotation_siderale_angle": 0,
         "rotation_siderale_vitesse": 1/5832,
         "rotation_siderale_direction": [0, -1, 0], # Vénus tourne dans le sens opposé
-        "texture_path": "assets/textures/venus.jpg"
+        "texture_path": "assets/textures/venus2.jpg"
     },
     {
         "name": "Jupiter",

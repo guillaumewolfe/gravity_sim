@@ -42,6 +42,9 @@ class RenderTool:
         #Temporaire
         self.bg_texture1 = pyglet.image.load('assets/textures/background_alpha1.png').get_texture()
         self.bg_texture2 = pyglet.image.load('assets/textures/background2.jpg').get_texture()
+        self.bg_texture3 = pyglet.image.load('assets/textures/background3.jpg').get_texture()
+        self.bg_texture4 = pyglet.image.load('assets/textures/background4.jpg').get_texture()
+        self.saturn_ring = pyglet.image.load('assets/textures/saturn_ring2.png').get_texture()
     
     def update(self,labels, buttons, objects, rotation_x, rotation_y, rotation_z, translation_x,translation_y,zoom):
         #Update des objets et cameras settings selon le changement fait dans l'état
@@ -57,6 +60,8 @@ class RenderTool:
         self.translation_x = translation_x
         self.translation_y = translation_y
         self.zoom = zoom
+
+
 
     def setup_2d_projection(self):
         glDisable(GL_DEPTH_TEST)
@@ -121,15 +126,19 @@ class RenderTool:
 
         offset_x2 = self.translation_x * 0.05 + rotation_offset_x
         offset_y2 = self.translation_y * 0.05 + rotation_offset_y
+        
+        glBindTexture(GL_TEXTURE_2D, self.bg_texture2.id)
+        self.draw_quad_with_offset(offset_x2,offset_y2,2)
 
-        glBindTexture(GL_TEXTURE_2D, self.background_texture.id)
-        self.draw_quad_with_offset(offset_x2,offset_y2,60)
 
-        offset_x3 = self.translation_x * 0.06 + rotation_offset_x
-        offset_y3 = self.translation_y * 0.06 + rotation_offset_y
+        offset_x3 = self.translation_x * 2 + rotation_offset_x*20
+        offset_y3 = self.translation_y * 2 + rotation_offset_y*20
 
         glBindTexture(GL_TEXTURE_2D, self.background_texture.id)
         self.draw_quad_with_offset(offset_x3,offset_y3,2)
+
+    
+
 
 
 
@@ -293,24 +302,51 @@ class RenderTool:
         glColor4f(1, 1, 1, 1)  # Reset color
         glLineWidth(1)         # Reset line width
 
+    def draw_saturn_ring(self, obj):
+        # Assuming obj represents Saturn and has attributes for ring texture, radius, and position.
+
+        # Enable texture
+        glEnable(GL_TEXTURE_2D)
+        glBindTexture(GL_TEXTURE_2D, self.saturn_ring.id)
+
+        # Enable blending for transparency
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+        glPushMatrix()
+
+        # Translate to Saturn's position
+        glTranslatef(obj.position_simulation[0]+1, obj.position_simulation[1]+1, obj.position_simulation[2])
+
+        # Rotate for inclination of the rings
+        glRotatef(20, 1, 0, 0)
+
+        half_width = obj.rayon_simulation * 2.5  # or whatever appropriate size
+        half_height = half_width  # since it's square
+
+        # Draw a textured quad for the ring
+        glBegin(GL_QUADS)
+        glTexCoord2f(0, 0); glVertex3f(-half_width, -half_height, 0)
+        glTexCoord2f(1, 0); glVertex3f( half_width, -half_height, 0)
+        glTexCoord2f(1, 1); glVertex3f( half_width,  half_height, 0)
+        glTexCoord2f(0, 1); glVertex3f(-half_width,  half_height, 0)
+        glEnd()
+
+        glPopMatrix()
+
+        glDisable(GL_TEXTURE_2D)
 
     def draw_highlight(self, obj):
         scale_factor = 0.5 * math.sin(2 * math.pi * self.frame_counter / 90) + 0.5  # This oscillates between 0 and 1 over 60 frames
-        scale = obj.rayon_simulation *1.01 + 2 * scale_factor 
+        scale = obj.rayon_simulation *1.01 + 1.5 * scale_factor 
         position = obj.position_simulation
         """Draw a semi-transparent sphere around the selected object."""
         # Color (47,233,240) with 0.5 transparency
+        colors = (255,255,255)
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
 
-
-        color_factor = 0.5 * math.sin(2 * math.pi * self.frame_counter / 90+math.pi/2) + 0.5  # This oscillates between 0 and 1 over 90 frames
-        colors = (
-            255 + (47 - 255) * color_factor,
-            255 + (233 - 255) * color_factor,
-            255 + (240 - 255) * color_factor
-        )
-
-
-        glColor4f(colors[0]/255, colors[1]/255, colors[2]/255, 0.125)
+        glColor4f(colors[0]/255, colors[1]/255, colors[2]/255, 0.15)
         
 
         glPushMatrix()
@@ -347,6 +383,9 @@ class RenderTool:
             gluSphere(quadric, obj.rayon_simulation, 100, 30)
             glPopMatrix()
             glDisable(GL_TEXTURE_2D)
+
+            if obj.name == "Saturne":
+                self.draw_saturn_ring(obj)
             
     
     def draw(self):
