@@ -5,7 +5,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 class Button:
-    def __init__(self, window, x_rel, y_rel, width_rel, height_rel, text, color,font,opacity=255):
+    def __init__(self, window, x_rel, y_rel, width_rel, height_rel, text, color,font,opacity=255, enable = True):
         self.window = window
         self.x_rel = x_rel
         self.y_rel = y_rel
@@ -34,11 +34,14 @@ class Button:
                                        x=0, y=0, anchor_x='center', anchor_y='center')
         self.hover_rectangle = shapes.Rectangle(0, 0, 0, 0, color=self.padding_color[:3])
         self.hover_rectangle.opacity=opacity
+        self.enabled = enable 
         
         # Appelez update_position pour initialiser leurs positions
         self.update_position()
 
+
     def update_position(self):
+        if not self.enabled: return
         width = self.window.width * self.width_rel
         height = self.window.height * self.height_rel
         x = self.window.width * self.x_rel - width // 2
@@ -59,6 +62,7 @@ class Button:
         self.hover_rectangle.width = width + 2 * self.hover_padding
         self.hover_rectangle.height = height + 2 * self.hover_padding
     def draw(self):
+        if not self.enabled: return
         if self.hover:
             color = self.padding_color
             self.hover_rectangle.color=self.padding_color[:3]
@@ -69,6 +73,7 @@ class Button:
         self.rectangle.draw()
         self.label.draw()
     def contains_point(self, x, y):
+        if not self.enabled: return False
         return (self.rectangle.x < x < self.rectangle.x + self.rectangle.width and
                 self.rectangle.y < y < self.rectangle.y + self.rectangle.height)
 
@@ -82,13 +87,15 @@ class Button:
         elif soundType == "close":
             self.closeSound.play()
     def click(self):
+        if not self.enabled: return
         self.padding_color = self.click_color
 
     def unclick(self):
+        if not self.enabled: return
         self.padding_color = self.padding_color_perm
 
 class Label:
-    def __init__(self, window, text, x_percent, y_percent,font,color, font_size_percent=5):
+    def __init__(self, window, text, x_percent, y_percent,font,color, font_size_percent=5,enable = True):
         self.window = window
         self.text = text
         self.x_percent = x_percent
@@ -96,6 +103,7 @@ class Label:
         self.font_size_percent = font_size_percent
         self.color = color
         self.font=font
+        self.enabled = enable or True
         
         self.label = pyglet.text.Label(
             self.text,
@@ -117,6 +125,7 @@ class Label:
         return self.window.height * (self.font_size_percent / 100.0)
 
     def draw(self):
+        if not self.enabled: return
         self.label.font_size = self.calculate_font_size()
         self.label.x = self.calculate_x()
         self.label.y = self.calculate_y()

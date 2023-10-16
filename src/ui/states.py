@@ -225,7 +225,7 @@ class SimulationState(BaseState):
             Label(window, 'Simulation', 0.5, 0.9,self.font,(255, 255, 255, 205),4),
             Label(window, f"Simulation Time: {self.simulation_time:.2f} seconds", 0.5, 0.1,self.font,(126, 161, 196, 255),2),
             Label(window, f"Time multiplier: x {self.time_multiplier:,}".replace(","," "), 0.5, 0.15,self.font,(126, 161, 196, 255),2),  
-            Label(self.window, f"Selected object: ", 0.5, 0.20,self.font,(126, 161, 196, 255),2)         
+            Label(self.window, f"Selected object : ", 0.5, 0.20,self.font,(126, 161, 196, 255),2)         
                        ]
         
 
@@ -234,9 +234,9 @@ class SimulationState(BaseState):
             Button(self.window, 0.875, 0.0925, 0.1875, 0.055, "Restart", (255, 255, 255),self.font,opacity=200),
             Button(self.window, 0.5, 0.0325, 0.0875, 0.055, "Pause", (255, 255, 255),self.font,opacity=200),
             Button(self.window, 0.875, 0.1725, 0.1275, 0.055, "Reset Position", (255, 255, 255),self.font,opacity=200),
+            Button(self.window, 0.125, 0.1725, 0.1875, 0.075, "Zoom on selection", (255, 255, 255),self.font,opacity=200,enable=False),
             ]
         self.objects = create_celestial_objects(CELESTIAL_PARAMETERS)
-        for obj in self.objects:print(f"{obj.name} : {obj.color_id}")
         background_image = pyglet.image.load("assets/textures/background.jpg")
         self.background_texture = background_image.get_texture()
         self.renderTool = render.RenderTool(window,self.labels,self.buttons,self.objects,self.rotation_x,self.rotation_y,self.rotation_z,self.translation_x,self.translation_y,self.zoom,self.background_texture)
@@ -261,6 +261,7 @@ class SimulationState(BaseState):
         self.translation_x = 0
         self.translation_y = 0
         self.zoom = 0
+        self.renderTool.followObjectEnabled = False
     def restart(self):
         self.reset_positions()
         self.objects = None
@@ -275,11 +276,18 @@ class SimulationState(BaseState):
         self.update_render_tool()
         #On dessine
         self.renderTool.draw()
-        
 
-    def on_mouse_press(self, x, y, button, modifiers):
+    def check_selection(self,x,y):
         self.update_render_tool()
         self.selected_object = self.renderTool.selection_mode(x,y)
+        if self.selected_object is not None:
+            self.buttons[4].enabled = True
+        else :
+            self.buttons[4].enabled = False
+
+
+
+    def on_mouse_press(self, x, y, button, modifiers):
         for btn in self.buttons:
             btn.click()
 
@@ -311,25 +319,41 @@ class SimulationState(BaseState):
 
         
     def on_mouse_released(self, x, y, button, modifiers):
-        #if self.selected_object: print(self.selected_object.name)
+        buttonClicked = False
+
         for btn in self.buttons:
             btn.unclick()
             if btn.contains_point(x, y):
-                    
-                    if btn.text == "Menu":
-                        btn.play_sound("menu")
-                        self.switch_state(StartMenuState)
-                        
-                    if btn.text == "Restart":
-                        btn.play_sound("normal")
-                        self.restart()
+                buttonClicked = True
+                if btn.text == "Menu":
+                    btn.play_sound("menu")
+                    self.switch_state(StartMenuState)
 
-                    if btn.text == "Pause" or btn.text == "Resume":
-                        self.pause()
                     
-                    if btn.text == "Reset Position":
-                        btn.play_sound("normal")
-                        self.reset_positions()
+                if btn.text == "Restart":
+                    btn.play_sound("normal")
+                    self.restart()
+
+
+                if btn.text == "Pause" or btn.text == "Resume":
+                    self.pause()
+
+                
+                if btn.text == "Reset Position":
+                    btn.play_sound("normal")
+                    self.reset_positions()
+                
+
+                if btn.text == "Zoom on selection":
+                    self.reset_positions()
+                    self.renderTool.followObjectEnabled = True
+                    self.renderTool.followObject = self.renderTool.selectedObject
+        if not buttonClicked:
+            self.check_selection(x,y)
+                        
+
+
+            
 
 
 

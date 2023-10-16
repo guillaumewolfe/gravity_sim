@@ -76,12 +76,16 @@ class RenderTool:
         self.zoom = zoom
         self.distance_initiale = -100
 
+
         #Initiate only
         self.background_texture = backgroundTexture
         self.frameBuffer = FrameBuffer(*window.get_size())
 
-        #Status Conditions to False
-        self.isSelected = False
+        #Selection
+        self.selectedObject = None
+        self.followObjectEnabled = False
+        self.followObject = None
+
 
         #Temporaire
         self.bg_texture1 = pyglet.image.load('assets/textures/background_alpha1.png').get_texture()
@@ -201,16 +205,26 @@ class RenderTool:
         glEnd()
     
     def move_camera(self):
+        
+        if self.followObjectEnabled and self.followObject is not None:
+            x_followObject = self.followObject.position_simulation[0]
+            y_followObject = self.followObject.position_simulation[1]
+            z_followObject = self.followObject.position_simulation[2]
+        else:
+            x_followObject,y_followObject,z_followObject = 0,0,0
+
         glLoadIdentity()
         #Translation initiale + Zoom
-        glTranslatef(0, 0, self.distance_initiale+self.zoom)
         #Translation selon le mouvement
+        glTranslatef(0, 0, self.distance_initiale+self.zoom)
         glTranslatef(self.translation_x,self.translation_y,0)
-
-        #Rotation selon le mouvement
         glRotatef(self.rotation_x, 1, 0, 0)  # Rotation autour de l'axe X
         glRotatef(self.rotation_y, 0, 1, 0)
         glRotatef(self.rotation_z, 0, 0, 1)
+
+        glTranslatef(- x_followObject,- y_followObject,-z_followObject)
+
+        #Rotation selon le mouvement
     
     def draw_pyglet_objects(self):
         for label in self.labels:
@@ -246,16 +260,15 @@ class RenderTool:
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
         color_id = (output_buffer[0],output_buffer[1],output_buffer[2])
-        print(color_id)
 
 
 
         if color_id[2]>200 : return None
 
-        selected_obj = self.get_object_by_color_id(color_id)
+        self.selectedObject = self.get_object_by_color_id(color_id)
 
-        return selected_obj
-    
+        return self.selectedObject
+
         
     def render_with_colors(self):
         # Clear the buffer with the blue background color
