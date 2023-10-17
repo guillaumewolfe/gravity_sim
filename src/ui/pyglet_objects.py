@@ -25,8 +25,10 @@ class Button:
         self.click_color = (32, 247, 173, 255)
         self.padding_color = (255, 255,255 , 255)
         self.padding_color_perm = (255, 255,255 , 255)
-        self.padding_color = (140, 158, 189, 255)
-        self.padding_color_perm = (140, 158, 189, 255)
+        self.padding_color = (93, 235, 221, 255)
+        self.padding_color_perm = (93, 235, 221, 255)
+        #self.padding_color = (140, 158, 189, 255)
+        #self.padding_color_perm = (140, 158, 189, 255)
         self.hover_padding = 5  # La taille supplémentaire pour l'effet de surbrillance
         self.rectangle = shapes.Rectangle(0, 0, 0, 0, color=self.color)
         self.rectangle.opacity = opacity
@@ -53,7 +55,7 @@ class Button:
         self.rectangle.height = height
         
         self.label.text = self.text
-        self.label.font_size = height * 0.4
+        self.label.font_size = height * 0.35
         self.label.x = self.window.width * self.x_rel
         self.label.y = self.window.height * self.y_rel
 
@@ -69,6 +71,7 @@ class Button:
             self.hover_rectangle.draw()
         else:
             color = (140, 158, 189, 255) 
+            color = (255, 255, 255, 255) 
         self.label.color = color
         self.rectangle.draw()
         self.label.draw()

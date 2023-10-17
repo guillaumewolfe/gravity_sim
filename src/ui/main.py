@@ -9,6 +9,7 @@ import states
 from GameStateManager import GameStateManager
 
 
+
 #Génération de la fenêtre
 screen = pyglet.canvas.get_display().get_default_screen()
 WIDTH, HEIGHT = 1820,980

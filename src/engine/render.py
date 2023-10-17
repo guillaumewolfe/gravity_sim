@@ -2,6 +2,7 @@ from pyglet.gl import *
 from pyglet.text import Label
 import math
 from engine_tools.FrameBuffer import FrameBuffer
+from ctypes import c_char_p,POINTER,c_int,cast
 
 class RenderTool:
     def __init__(self,window, labels, buttons, objects, rotation_x, rotation_y, rotation_z, translation_x,translation_y,zoom,backgroundTexture):
@@ -20,7 +21,7 @@ class RenderTool:
         self.translation_y = translation_y
         self.zoom = zoom
 
-        self.translation_initiale = (0, 0,-200)
+        self.translation_initiale = (0, 0,-150)
         self.rotation_initiale = (0,100, 10.5)
 
         #Initiate only
@@ -35,8 +36,14 @@ class RenderTool:
         #Highligh
         self.frame_counter = 0
 
+        #Axe et plane
+        self.axesEnable = False
+        self.planeEnable = True
+        self.followLineEnable = True
 
-        #Temporaire
+
+
+        #Background
         self.bg_texture1 = pyglet.image.load('assets/textures/background_alpha1.png').get_texture()
         self.bg_texture2 = pyglet.image.load('assets/textures/background2.jpg').get_texture()
         self.bg_texture3 = pyglet.image.load('assets/textures/background3.jpg').get_texture()
@@ -92,6 +99,8 @@ class RenderTool:
 
         return camera_x, camera_y, camera_z
     
+
+
     def set_background(self):
         glEnable(GL_TEXTURE_2D)
         glBindTexture(GL_TEXTURE_2D, self.background_texture.id)
@@ -338,6 +347,49 @@ class RenderTool:
         glDisable(GL_LIGHTING)
         glDisable(GL_LIGHT0)
 
+
+    def draw_axes(self, length=50, position = [0,0,0]):
+
+        glEnable(GL_LINE_STIPPLE)
+        basic_pattern = [0xAAAA,0xEAEA,0x5555,0x7575,0xAAAA,0xD5D5,0x5555,0xB5B5]
+        index = int(self.frame_counter/5)%len(basic_pattern)
+        stipple_pattern = basic_pattern[index]
+        glLineStipple(4,stipple_pattern&0xFFFF)
+        glLineStipple(4,0xAAAA)
+        glDisable(GL_LINE_STIPPLE)
+
+
+        glBegin(GL_LINES)
+
+        glColor4f(1,1,1,0.5)
+
+
+        if self.axesEnable:
+            #Axe X
+            glVertex3f(position[0],position[1],position[2])
+            glVertex3f(position[0]+length,position[1],position[2])
+            
+            #Axe Z
+            glVertex3f(position[0],position[1],position[2])
+            glVertex3f(position[0],position[1],position[2]+length)
+            
+            #Axe Y
+            glVertex3f(position[0],position[1],position[2])
+            glVertex3f(position[0],position[1]+length,position[2])
+
+        glColor4f(1,1,1,0.6)
+        #Lign from the sun to the object
+        if self.followLineEnable:
+            glVertex3f(0,0,0)
+            glVertex3f(position[0],position[1],position[2])
+
+
+        glColor4f(1,1,1,1)
+        glEnd()
+        glDisable(GL_LINE_STIPPLE)
+
+
+
     def draw_highlight(self, obj):
         scale_factor = 0.5 * math.sin(2 * math.pi * self.frame_counter / 90) + 0.5  # This oscillates between 0 and 1 over 60 frames
         scale = obj.rayon_simulation *1.01 + 1.5 * scale_factor 
@@ -367,7 +419,30 @@ class RenderTool:
         glPopMatrix()
         glColor4f(1, 1, 1, 1)
 
+    def draw_sun(self, obj):
+        quadric = gluNewQuadric()
+        gluQuadricTexture(quadric, GL_TRUE)
+        gluSphere(quadric, obj.rayon_simulation, 100, 30)
+        glPopMatrix()
 
+        glDisable(GL_TEXTURE_2D)
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
+        glDisable(GL_DEPTH_TEST)
+
+        glPushMatrix()
+        quadric = gluNewQuadric()
+
+        for i in range(1,2):
+            glColor4f(1.0,1.0,0.7,0.05/i)
+            gluSphere(quadric,obj.rayon_simulation*(1+0.005*i),100,30)
+        glPopMatrix()
+        glEnable(GL_DEPTH_TEST)
+        glDisable(GL_BLEND)
+        glEnable(GL_TEXTURE_2D)
+        glColor4f(1,1,1,1)
+    
+        
 
     def draw_celestial_objects(self):
         glEnable(GL_TEXTURE_2D)
@@ -408,13 +483,11 @@ class RenderTool:
                 glLightfv(GL_LIGHT0, GL_POSITION, sun_position)
 
                 glDisable(GL_LIGHTING)
-                
-                quadric = gluNewQuadric()
-                gluQuadricTexture(quadric, GL_TRUE)
-                gluSphere(quadric, obj.rayon_simulation, 100, 30)
-                glPopMatrix()
+
+                self.draw_sun(obj)
 
                 glEnable(GL_LIGHTING)
+
 
 
 
@@ -454,6 +527,7 @@ class RenderTool:
          #Highlight selected object
         if self.selectedObject:
             self.draw_highlight(self.selectedObject)
+            self.draw_axes(position=self.selectedObject.position_simulation)
         #Path of objects:
         self.draw_planet_path()
 

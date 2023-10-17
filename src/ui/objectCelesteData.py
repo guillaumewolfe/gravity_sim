@@ -91,7 +91,7 @@ CELESTIAL_PARAMETERS = [
     },
     {
         "name": "Uranus",
-        "type": 1,
+        "type": 2,
         "relation": "Soleil",
         "real_distance": 2_870_658_186e3,
         "real_radius": 25362e3,
@@ -100,7 +100,7 @@ CELESTIAL_PARAMETERS = [
         "accel": [0, 0, 0],
         "inclinaison": 97.77,
         "rotation_siderale_angle": 0,
-        "rotation_siderale_vitesse": 1/17.2,
+        "rotation_siderale_vitesse": 0.0058,
         "rotation_siderale_direction": [0, 1, 0],
         "texture_path": "assets/textures/uranus.jpg"
     },
@@ -115,7 +115,7 @@ CELESTIAL_PARAMETERS = [
         "accel": [0, 0, 0],
         "inclinaison": 28.32,
         "rotation_siderale_angle": 0,
-        "rotation_siderale_vitesse": 1/16,
+        "rotation_siderale_vitesse": 0.0062,
         "rotation_siderale_direction": [0, 1, 0],
         "texture_path": "assets/textures/neptune.jpg"
     },

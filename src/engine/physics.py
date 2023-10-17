@@ -48,7 +48,7 @@ def update_positions(obj, dt):
 def append_position_history(obj):
     obj.update_distance_list()
     distance = obj.calculate_distance_parcourue()
-    if distance > obj.demi_orbite:
+    if distance > obj.demi_orbite or len(obj.position_history)>750:
         obj.position_history.pop(0)
     obj.position_history.append(obj.position_simulation)
 
