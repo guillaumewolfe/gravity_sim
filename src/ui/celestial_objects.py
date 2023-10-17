@@ -5,7 +5,7 @@ from objectCelesteData import CELESTIAL_PARAMETERS
 
 
 class CelestialObject:
-    def __init__(self, name, relation, real_position, real_radius, texture_path,real_distance = None,position_simulation=None,rayon_simulation=None ,velocity=None, force=None, accel=None, weight=None,inclinaison=None,rotation_siderale_angle=None,rotation_siderale_vitesse=None,rotation_direction=None,color_id = (0,0,0)):
+    def __init__(self, name, relation, real_position, real_radius, texture_path,type_object = 2,real_distance = None,position_simulation=None,rayon_simulation=None ,velocity=None, force=None, accel=None, weight=None,inclinaison=None,rotation_siderale_angle=None,rotation_siderale_vitesse=None,rotation_direction=None,color_id = (0,0,0)):
         self.name = name
         self.real_position = real_position  # position en unités réelles
         self.relation = relation
@@ -13,6 +13,7 @@ class CelestialObject:
         self.velocity = velocity or [0, 0, 0]
         self.force = force or [0, 0, 0]
         self.accel = accel or [0, 0, 0]
+        self.type_object = type_object
         self.weight = weight or 0
         self.real_radius = real_radius  # rayon en unités réelles
         self.real_distance = real_distance or 0
@@ -67,6 +68,7 @@ def create_celestial_objects(params_list):
             velocity=params["velocity"],
             weight=params["weight"],
             accel=params["accel"],
+            type_object=params["type"],
             real_distance=params["real_distance"],
             inclinaison=params["inclinaison"],
             rotation_siderale_angle=params["rotation_siderale_angle"],

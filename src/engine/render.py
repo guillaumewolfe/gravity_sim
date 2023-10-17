@@ -22,9 +22,6 @@ class RenderTool:
 
         self.translation_initiale = (0, 0,-200)
         self.rotation_initiale = (0,100, 10.5)
-        
-        
-
 
         #Initiate only
         self.background_texture = backgroundTexture
@@ -303,10 +300,13 @@ class RenderTool:
         glLineWidth(1)         # Reset line width
 
     def draw_saturn_ring(self, obj):
+
         # Assuming obj represents Saturn and has attributes for ring texture, radius, and position.
 
         # Enable texture
         glEnable(GL_TEXTURE_2D)
+        glEnable(GL_LIGHTING)
+        glEnable(GL_LIGHT0)
         glBindTexture(GL_TEXTURE_2D, self.saturn_ring.id)
 
         # Enable blending for transparency
@@ -335,6 +335,8 @@ class RenderTool:
         glPopMatrix()
 
         glDisable(GL_TEXTURE_2D)
+        glDisable(GL_LIGHTING)
+        glDisable(GL_LIGHT0)
 
     def draw_highlight(self, obj):
         scale_factor = 0.5 * math.sin(2 * math.pi * self.frame_counter / 90) + 0.5  # This oscillates between 0 and 1 over 60 frames
@@ -368,25 +370,72 @@ class RenderTool:
 
 
     def draw_celestial_objects(self):
-        for obj in self.objects:
-            glEnable(GL_TEXTURE_2D)
+        glEnable(GL_TEXTURE_2D)
+        # Set up lighting parameters
+        glEnable(GL_LIGHTING)
+        glEnable(GL_LIGHT0)
+
+
+        ambient_light_intensity = 20
+        ambient_light = (GLfloat * 4)(ambient_light_intensity/100, ambient_light_intensity/100, ambient_light_intensity/100, 1.0) # Ambient reflection 
+        glLightfv(GL_LIGHT0, GL_AMBIENT, ambient_light) 
+
+        diffuse_light_intensity = 100
+        diffuse_light = (GLfloat * 4)(diffuse_light_intensity/100, diffuse_light_intensity/100, diffuse_light_intensity/100, 1.0) # Diffuse reflection 
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse_light) 
+
+        specular_light_intensity = 100
+        specular_light = (GLfloat * 4)(specular_light_intensity/100, specular_light_intensity/100, specular_light_intensity/100, 1.0) # Specular reflection 
+        glLightfv(GL_LIGHT0, GL_SPECULAR, specular_light)
+
+
+
+        for i,obj in enumerate(self.objects):
+            #Bind texture
             glBindTexture(GL_TEXTURE_2D, obj.texture.id)
             glPushMatrix()
+
+            #On positionne l'object
             glTranslatef(obj.position_simulation[0], obj.position_simulation[1], obj.position_simulation[2])
+
             if hasattr(obj, "inclinaison"):
                 glRotatef(obj.inclinaison,1,0,0)
     
             glRotatef(obj.rotation_siderale_angle,*obj.rotation_direction)
 
-            quadric = gluNewQuadric()
-            gluQuadricTexture(quadric, GL_TRUE)
-            gluSphere(quadric, obj.rayon_simulation, 100, 30)
-            glPopMatrix()
-            glDisable(GL_TEXTURE_2D)
+            if obj.type_object == 1: #Une étoile
+                sun_position = (GLfloat*4)(obj.position_simulation[0], obj.position_simulation[1], obj.position_simulation[2], 1)
+                glLightfv(GL_LIGHT0, GL_POSITION, sun_position)
 
+                glDisable(GL_LIGHTING)
+                
+                quadric = gluNewQuadric()
+                gluQuadricTexture(quadric, GL_TRUE)
+                gluSphere(quadric, obj.rayon_simulation, 100, 30)
+                glPopMatrix()
+
+                glEnable(GL_LIGHTING)
+
+
+
+
+            else:
+                #On dessine une sphère avec la texture
+                quadric = gluNewQuadric()
+                gluQuadricTexture(quadric, GL_TRUE)
+                gluSphere(quadric, obj.rayon_simulation, 100, 30)
+                glPopMatrix()
+
+
+            #Anneaux de Saturne
             if obj.name == "Saturne":
                 self.draw_saturn_ring(obj)
-            
+
+
+
+        glDisable(GL_TEXTURE_2D)
+        glDisable(GL_LIGHTING)
+        glDisable(GL_LIGHT0)  
     
     def draw(self):
 

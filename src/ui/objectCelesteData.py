@@ -1,6 +1,7 @@
 CELESTIAL_PARAMETERS = [
     {
         "name": "Soleil",
+        "type": 1,
         "relation": "Soleil",
         "real_distance": 0,  # Le Soleil est le point de référence
         "real_radius": 696_340e3,  # en mètres
@@ -15,6 +16,7 @@ CELESTIAL_PARAMETERS = [
     },
     {
         "name": "Terre",
+        "type": 2,
         "relation": "Soleil",
         "real_distance": 149_597_870e3,  # en mètres
         "real_radius": 6371e3,  # en mètres
@@ -29,6 +31,7 @@ CELESTIAL_PARAMETERS = [
     },
     {
         "name": "Mars",
+        "type": 2,
         "relation": "Soleil",
         "real_distance": 225_000_000e3,  # en mètres
         "real_radius": 3390e3,  # en mètres
@@ -43,6 +46,7 @@ CELESTIAL_PARAMETERS = [
     },
     {
         "name": "Mercure",
+        "type": 2,
         "relation": "Soleil",
         "real_distance": 57_909_175e3,
         "real_radius": 2439.7e3,
@@ -57,6 +61,7 @@ CELESTIAL_PARAMETERS = [
     },
     {
         "name": "Venus",
+        "type": 2,
         "relation": "Soleil",
         "real_distance": 108_208_930e3,
         "real_radius": 6051.8e3,
@@ -71,6 +76,7 @@ CELESTIAL_PARAMETERS = [
     },
     {
         "name": "Jupiter",
+        "type": 2,
         "relation": "Soleil",
         "real_distance": 778_340_821e3,
         "real_radius": 69911e3,
@@ -84,21 +90,8 @@ CELESTIAL_PARAMETERS = [
         "texture_path": "assets/textures/jupiter.jpg"
     },
     {
-        "name": "Saturne",
-        "relation": "Soleil",
-        "real_distance": 1_426_666_422e3,
-        "real_radius": 58232e3,
-        "weight": 5.683e26,
-        "velocity": [0, 0, -9.68e3],
-        "accel": [0, 0, 0],
-        "inclinaison": 26.73,
-        "rotation_siderale_angle": 0,
-        "rotation_siderale_vitesse": 0.0093,
-        "rotation_siderale_direction": [0, 1, 0],
-        "texture_path": "assets/textures/saturn.jpg"
-    },
-    {
         "name": "Uranus",
+        "type": 1,
         "relation": "Soleil",
         "real_distance": 2_870_658_186e3,
         "real_radius": 25362e3,
@@ -113,8 +106,9 @@ CELESTIAL_PARAMETERS = [
     },
     {
         "name": "Neptune",
+        "type": 2,
         "relation": "Soleil",
-        "real_distance": 4_498_396_441e3,
+        "real_distance": 4_498_396_441e3, 
         "real_radius": 24622e3,
         "weight": 1.024e26,
         "velocity": [0, 0, -5.43e3],
@@ -126,18 +120,19 @@ CELESTIAL_PARAMETERS = [
         "texture_path": "assets/textures/neptune.jpg"
     },
     {
-        "name": "Lune",
-        "relation": "Terre",
-        "real_distance": 384400e3,  # en mètres
-        "real_radius": 1737.5e3,  # en mètres
-        "weight": 7.342e22,  # en kg
-        "velocity": [0, -1.022e3, -29.78e3],  # en m/s, supposons que la vitesse soit dans la direction x pour simplifier
+        "name": "Saturne",
+        "type": 2,
+        "relation": "Soleil",
+        "real_distance": 1_426_666_422e3,
+        "real_radius": 58232e3,
+        "weight": 5.683e26,
+        "velocity": [0, 0, -9.68e3],
         "accel": [0, 0, 0],
-        "inclinaison": 0,
+        "inclinaison": 26.73,
         "rotation_siderale_angle": 0,
-        "rotation_siderale_vitesse": 0,
-        "rotation_siderale_direction": [0,0,0],
-        "texture_path": "assets/textures/lunar.jpg"
+        "rotation_siderale_vitesse": 0.0093,
+        "rotation_siderale_direction": [0, 1, 0],
+        "texture_path": "assets/textures/saturn.jpg"
     }
 ]
 
@@ -244,11 +239,12 @@ CELESTIAL_PARAMETERS.extend([
 autre = [
     {
         "name": "Lune",
+        "type": 2,
         "relation": "Terre",
         "real_distance": 384400e3,  # en mètres
         "real_radius": 1737.5e3,  # en mètres
         "weight": 7.342e22,  # en kg
-        "velocity": [0, 1.022e3+29.78e3, 0],  # en m/s, supposons que la vitesse soit dans la direction x pour simplifier
+        "velocity": [0, -1.022e3, -29.78e3],  # en m/s, supposons que la vitesse soit dans la direction x pour simplifier
         "accel": [0, 0, 0],
         "inclinaison": 0,
         "rotation_siderale_angle": 0,
