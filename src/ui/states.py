@@ -56,7 +56,6 @@ class BaseState:
         if not ressources:
             ressources["background_video"] = pyglet.media.load('assets/animations/back.mp4')
             ressources["background_music"] = pyglet.media.load('assets/sounds/music_background.mp3',streaming=False)
-            ressources["font"] = font.add_file('assets/fonts/OpenSans-VariableFont_wdth,wght.ttf')
         return ressources
 
 
@@ -258,6 +257,8 @@ class SimulationState(BaseState):
         self.objects = create_celestial_objects(CELESTIAL_PARAMETERS)
         self.time_multiplier = 1
         self.simulation_time=0
+        self.selected_object = None
+        
 
     def update_render_tool(self):
         self.renderTool.update(self.labels,self.buttons,self.objects,self.rotation_x,self.rotation_y,self.rotation_z,self.translation_x,self.translation_y,self.zoom)

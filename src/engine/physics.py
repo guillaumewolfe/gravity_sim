@@ -48,8 +48,6 @@ def update_positions(obj, dt):
 def append_position_history(obj):
     obj.update_distance_list()
     distance = obj.calculate_distance_parcourue()
-    if obj.name=="Terre":
-        print(len(obj.position_history))
     if distance > obj.demi_orbite:
         obj.position_history.pop(0)
     obj.position_history.append(obj.position_simulation)

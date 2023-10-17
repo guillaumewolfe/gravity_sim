@@ -125,6 +125,20 @@ CELESTIAL_PARAMETERS = [
         "rotation_siderale_direction": [0, 1, 0],
         "texture_path": "assets/textures/neptune.jpg"
     },
+    {
+        "name": "Lune",
+        "relation": "Terre",
+        "real_distance": 384400e3,  # en mètres
+        "real_radius": 1737.5e3,  # en mètres
+        "weight": 7.342e22,  # en kg
+        "velocity": [0, -1.022e3, -29.78e3],  # en m/s, supposons que la vitesse soit dans la direction x pour simplifier
+        "accel": [0, 0, 0],
+        "inclinaison": 0,
+        "rotation_siderale_angle": 0,
+        "rotation_siderale_vitesse": 0,
+        "rotation_siderale_direction": [0,0,0],
+        "texture_path": "assets/textures/lunar.jpg"
+    }
 ]
 
 
