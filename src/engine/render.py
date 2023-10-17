@@ -433,8 +433,8 @@ class RenderTool:
         glPushMatrix()
         quadric = gluNewQuadric()
 
-        for i in range(1,2):
-            glColor4f(1.0,1.0,0.7,0.05/i)
+        for i in range(1,5):
+            glColor4f(1.0,1.0,0.7,0.07/i)
             gluSphere(quadric,obj.rayon_simulation*(1+0.005*i),100,30)
         glPopMatrix()
         glEnable(GL_DEPTH_TEST)

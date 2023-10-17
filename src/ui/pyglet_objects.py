@@ -22,14 +22,17 @@ class Button:
         self.startSound = pyglet.media.load('assets/sounds/start.mp3', streaming=False)
         self.menuSound = pyglet.media.load('assets/sounds/menu.mp3', streaming=False)
         self.closeSound = pyglet.media.load('assets/sounds/close.mp3', streaming=False)
+        self.hoverSound = pyglet.media.load('assets/sounds/select.wav', streaming=False)
+        self.warningSound = pyglet.media.load('assets/sounds/warning_click.wav', streaming=False)
+        self.selectionPlaneteSound = pyglet.media.load('assets/sounds/selection_planete.wav', streaming=False)
         self.click_color = (32, 247, 173, 255)
         self.padding_color = (255, 255,255 , 255)
         self.padding_color_perm = (255, 255,255 , 255)
-        self.padding_color = (93, 235, 221, 255)
-        self.padding_color_perm = (93, 235, 221, 255)
+        self.padding_color = (146, 230,211 , 255)
+        self.padding_color_perm = (146, 230,211 , 255)
         #self.padding_color = (140, 158, 189, 255)
         #self.padding_color_perm = (140, 158, 189, 255)
-        self.hover_padding = 5  # La taille supplémentaire pour l'effet de surbrillance
+        self.hover_padding = 3  # La taille supplémentaire pour l'effet de surbrillance
         self.rectangle = shapes.Rectangle(0, 0, 0, 0, color=self.color)
         self.rectangle.opacity = opacity
         self.label = pyglet.text.Label('', font_name=self.font, font_size=12,
@@ -37,6 +40,7 @@ class Button:
         self.hover_rectangle = shapes.Rectangle(0, 0, 0, 0, color=self.padding_color[:3])
         self.hover_rectangle.opacity=opacity
         self.enabled = enable 
+        self.hoverSoundPlayed = False
         
         # Appelez update_position pour initialiser leurs positions
         self.update_position()
@@ -63,13 +67,18 @@ class Button:
         self.hover_rectangle.y = y - self.hover_padding
         self.hover_rectangle.width = width + 2 * self.hover_padding
         self.hover_rectangle.height = height + 2 * self.hover_padding
+
     def draw(self):
         if not self.enabled: return
         if self.hover:
+            if not self.hoverSoundPlayed:
+                self.play_sound("hover")
+                self.hoverSoundPlayed = True
             color = self.padding_color
             self.hover_rectangle.color=self.padding_color[:3]
             self.hover_rectangle.draw()
         else:
+            self.hoverSoundPlayed = False
             color = (140, 158, 189, 255) 
             color = (255, 255, 255, 255) 
         self.label.color = color
@@ -89,6 +98,8 @@ class Button:
             self.startSound.play()
         elif soundType == "close":
             self.closeSound.play()
+        elif soundType == "hover":
+            self.hoverSound.play()
     def click(self):
         if not self.enabled: return
         self.padding_color = self.click_color

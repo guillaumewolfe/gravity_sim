@@ -107,11 +107,15 @@ class StartMenuState(BaseState):
         self.createVideo()
         self.createMusic()
 
-        self.label_welcome = Label(window, 'Bienvenue!', 0.5, 0.8,self.font,(255, 255, 255, 255),12)
+        self.labels = [
+            Label(window, 'Space Query', 0.5, 0.8,self.font,(255, 255, 255, 255),12),
+            Label(window, 'Main Menu', 0.5, 0.25,self.font,(255, 255, 255, 255),3),
+        ]
 
         self.buttons = [
-            Button(self.window, 0.5, 0.45, 0.25, 0.1, "Start", (255, 255, 255),self.font,opacity=175),
-            Button(self.window, 0.5, 0.3, 0.25, 0.1, "Close", (255, 255,255),self.font,opacity=175)
+            Button(self.window, 0.5, 0.20, 0.15, 0.05, "Start", (255, 255, 255),self.font,opacity=50),
+            Button(self.window, 0.5, 0.14, 0.15, 0.05, "Options", (255, 255, 255),self.font,opacity=50),
+            Button(self.window, 0.5, 0.08, 0.15, 0.05, "Close", (255, 255,255),self.font,opacity=50)
         ]
 
     def enter(self):
@@ -151,7 +155,7 @@ class StartMenuState(BaseState):
 
     def update_positions(self):
         if self.video_texture:
-            self.video_texture.blit(0,0)
+            self.video_texture.blit(0,0,width=self.window.width,height=self.window.height)
         for btn in self.buttons:
             btn.update_position()
 
@@ -160,7 +164,8 @@ class StartMenuState(BaseState):
         # Update "Start" button position
         self.setup_2d_projection()
         self.update_positions()
-        self.label_welcome.draw()
+        for label in self.labels:
+            label.draw()
         for button in self.buttons:
             button.draw()
 
@@ -204,6 +209,7 @@ class SimulationState(BaseState):
     def __init__(self,window):
         self.window = window
         super().__init__()
+        self.medias = self.load_shared_resources()
         self.frame_buffer = render.FrameBuffer(*window.get_size())
         self.isPaused = False
         self.simulation_time = 0  # représente le temps écoulé en secondes (ou toute autre unité de temps que vous souhaitez utiliser)
@@ -278,6 +284,7 @@ class SimulationState(BaseState):
         self.update_render_tool()
         self.selected_object = self.renderTool.selection_mode(x,y)
         if self.selected_object is not None:
+            self.medias["bruit_selection_planete"].play()
             self.buttons[4].enabled = True
         else :
             self.buttons[4].enabled = False
@@ -369,7 +376,9 @@ class LoadingState(BaseState):
     
     def load_media(self):
         self.medias["background_video"] = pyglet.media.load('assets/animations/back.mp4')
+        self.medias["background_video"] = pyglet.media.load('assets/animations/intro4.mp4')
         self.medias["background_music"] = pyglet.media.load('assets/sounds/music_background.mp3',streaming=False)
+        self.medias["bruit_selection_planete"] = pyglet.media.load('assets/sounds/selection_planete.wav', streaming=False)
         global ressources
         ressources = self.medias
 
