@@ -5,7 +5,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 class Button:
-    def __init__(self, window, x_rel, y_rel, width_rel, height_rel, text, color,font,opacity=255, enable = True):
+    def __init__(self, window, x_rel, y_rel, width_rel, height_rel, text, color,font,opacity=255, enable = True, isHighligh = False):
         self.window = window
         self.x_rel = x_rel
         self.y_rel = y_rel
@@ -13,6 +13,7 @@ class Button:
         self.height_rel = height_rel
         self.text = text
         self.color = color
+        self.isHighligh = isHighligh
         self.rectangle = None
         self.label = None
         self.font=font

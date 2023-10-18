@@ -218,23 +218,24 @@ class SimulationState(BaseState):
         self.selected_object = None
         self.couleur_label = (255,255,255,200)
         self.labels = [
-            Label(window, 'Simulation', 0.5, 0.9,self.font,(255, 255, 255, 205),4),
-            Label(window, f"Simulation Time: {self.simulation_time:.2f} seconds", 0.5, 0.1,self.font,self.couleur_label,2),
-            Label(window, f"Time multiplier: x {self.time_multiplier:,}".replace(","," "), 0.5, 0.15,self.font,self.couleur_label,2),  
-            Label(self.window, f"Selected object : ", 0.5, 0.20,self.font,self.couleur_label,2)         
+            Label(window, 'Simulation', 0.5, 0.9,self.font,(255, 255, 255, 0),4),
+            Label(window, f"Simulation Time: {self.simulation_time:.2f} seconds", 0.5, 0.0325,self.font,self.couleur_label,2),
+            Label(window, f"Time multiplier: x {self.time_multiplier:,}".replace(","," "), 0.5, 0.0825,self.font,self.couleur_label,2),  
+            Label(self.window, f"Selected object : ", 0.5, 0.1325,self.font,self.couleur_label,2)         
                        ]
         
         diff = 0.055
         restart_pos = 0.0925
         reset_pos = restart_pos+diff
         menu_pos = restart_pos+2*diff
+        pause_pos = restart_pos+3*diff
 
         self.buttons = [
             Button(self.window, 0.900, menu_pos, 0.1175, 0.045, "Menu", (255, 255, 255),self.font,opacity=20),
             Button(self.window, 0.900, restart_pos, 0.1175, 0.045, "Restart", (255, 255, 255),self.font,opacity=20),
-            Button(self.window, 0.5, 0.0325, 0.0875, 0.045, "Pause", (255, 255, 255),self.font,opacity=20),
+            Button(self.window, 0.9, pause_pos, 0.1175, 0.045, "Pause", (255, 255, 255),self.font,opacity=20),
             Button(self.window, 0.900, reset_pos, 0.1175, 0.045, "Reset Position", (255, 255, 255),self.font,opacity=20),
-            Button(self.window, 0.375, 0.20, 0.0675, 0.040, "Zoom", (255, 255, 255),self.font,opacity=20,enable=False),
+            Button(self.window, 0.375, 0.1325, 0.0675, 0.040, "Zoom", (255, 255, 255),self.font,opacity=20,enable=False),
             ]
         self.objects = create_celestial_objects(CELESTIAL_PARAMETERS)
         background_image = pyglet.image.load("assets/textures/background.jpg")
@@ -251,9 +252,9 @@ class SimulationState(BaseState):
         if not self.isPaused:
             self.simulation_time += dt * self.time_multiplier
             physics.update_physics(self.objects,dt* self.time_multiplier)
-        self.labels[1] = Label(self.window, f"Simulation Time: {self.simulation_time/86400:.2f} jours", 0.5, 0.1, self.font, self.couleur_label, 2)
-        self.labels[2] = Label(self.window, f"Time multiplier: x {self.time_multiplier:,}".replace(","," "), 0.5, 0.15,self.font,self.couleur_label,2)
-        self.labels[3] = Label(self.window, f"Selected object: {text}", 0.5, 0.20,self.font,self.couleur_label,2)
+        self.labels[1] = Label(self.window, f"Simulation Time: {self.simulation_time/86400:.2f} jours", 0.5, 0.0325, self.font, self.couleur_label, 2)
+        self.labels[2] = Label(self.window, f"Time multiplier: x {self.time_multiplier:,}".replace(","," "), 0.5, 0.0825,self.font,self.couleur_label,2)
+        self.labels[3] = Label(self.window, f"Selected object: {text}", 0.5, 0.1325,self.font,self.couleur_label,2)
     def reset_positions(self):
         self.rotation_x = 0 
         self.rotation_y = 0 
