@@ -6,6 +6,7 @@ from engine_tools.minimap import Minimap
 from ctypes import c_char_p,POINTER,c_int,cast
 from pyglet import shapes
 import ctypes
+import numpy as np
 
 class RenderTool:
     def __init__(self,window, labels, buttons, objects, rotation_x, rotation_y, rotation_z, translation_x,translation_y,zoom,backgroundTexture):
@@ -71,65 +72,213 @@ class RenderTool:
         self.zoom = zoom
 
     def draw_minimap(self):
-        padding = 1
-        rec  = shapes.Rectangle(0, 0, self.window.width*0.25, self.window.height*0.25, color=(1,1,1))
-        rec2  = shapes.Rectangle(0, 0, self.window.width*0.25+2*padding, self.window.height*0.25+2*padding, color=(255,255,255))
+        padding = 3
+        rec  = shapes.Rectangle(0, 0, self.window.width*0.20, self.window.height*0.30, color=(1,1,1))
+        rec2  = shapes.Rectangle(0, 0, self.window.width*0.20+2*padding, self.window.height*0.30+2*padding, color=(255,255,255))
         x_rel = 0.01
         y_rel = 0.02
         x = self.window.width * x_rel 
         y = self.window.height * y_rel 
-        
+
+
         rec.x = x
         rec.y = y
         rec2.x = x - padding
         rec2.y = y - padding
-        rec2.opacity = 10
+        rec2.opacity = 20
         rec.opacity = 200
         rec2.draw()
         rec.draw()
 
-        
-        
+        glMatrixMode(GL_PROJECTION)
         glPushMatrix()
-        glTranslatef(rec.x+self.window.width*0.25/2, rec.y+self.window.height*0.25/2, 0)  # Translate to the position of the rectangle
+        glLoadIdentity()
+        #gluPerspective(15, self.window.width/self.window.height, 1, 500)
+        #gluPerspective(35, self.window.width/self.window.height, 1, self.maxlength)
+
+
+
+        aspect_ratio = self.window.width / self.window.height
+
+        # Fix vertical bounds
+        half_height = 0.075 * self.window.height
+        bottom = -half_height
+        top = half_height
+
+        # Adjust horizontal bounds based on aspect ratio
+        half_width = half_height * aspect_ratio
+        left = -half_width
+        right = half_width
+        near,far = -100,100
+        glOrtho(left,right,bottom,top,near,far)
+
+
+
+        glMatrixMode(GL_MODELVIEW)
+
+        glPushMatrix()
+        glLoadIdentity()
+        glTranslatef(0,0,50)
+        glTranslatef(-107.5,-49,0)
+
+        #glPushMatrix()
         self.rotation_matrix = self.extract_rotation_matrix(self.matrix)
         glMultMatrixd(self.rotation_matrix)
-
         
-        radius = 3
-        length = 100
+        
+        
+        
+        glEnable(GL_DEPTH_TEST)
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
+        radius = 0.075
+        length = 22
+        opacity = 0.50
         # Create a GLU quadric object
         quadric = gluNewQuadric()
         # X-axis (Red)
-        glColor3f(1, 0, 0)
+        glColor4f(1, 0, 0, opacity)
         glPushMatrix()
         glTranslatef(0, 0, 0)
         glRotatef(90, 0, 1, 0)  # Rotate 90 degrees around the Y axis to align the cylinder along the X axis
-        gluCylinder(quadric, radius, radius, length, 32, 32)
+        gluCylinder(quadric, radius, radius, length, 100, 100)
         glPopMatrix()
 
-        # Y-axis (Green)
-        glColor3f(0, 1, 0)
+        #Boule au milieu
+        """glColor4f(1, 1, 1, opacity)
+        glPushMatrix()
+        quadric = gluNewQuadric()
+        gluSphere(quadric, 2*radius, 30, 30)
+        glPopMatrix()"""
+
+        # Z-axis (Vert)
+        glColor4f(0, 1, 0, opacity)
         glPushMatrix()
         glTranslatef(0, 0, 0)
-        gluCylinder(quadric, radius, radius, length, 32, 1)  # No need for rotation as it's already aligned to the Y axis
+        glRotatef(180, 1, 0, 0)
+        gluCylinder(quadric, radius, radius, length, 100, 100)  # No need for rotation as it's already aligned to the Y axis
         glPopMatrix()
+                
+        
 
-        # Z-axis (Blue)
-        glColor3f(0, 0, 1)
+        # Y-axis (Bleu)
+        glColor4f(0, 0, 1, opacity)
         glPushMatrix()
         glTranslatef(0, 0, 0)
         glRotatef(-90, 1, 0, 0)  # Rotate -90 degrees around the X axis to align the cylinder along the Z axis
-        gluCylinder(quadric, radius, radius, length, 32, 1)
+        gluCylinder(quadric, radius, radius, length, 100, 100)
         glPopMatrix()
+        if self.axesEnable:
+            length = length/2
+            # Y-axis (Bleu)
+            glColor4f(0, 0, 1, opacity*0.5)
+            glPushMatrix()
+            glTranslatef(0, 0, 0)
+            glRotatef(90, 1, 0, 0)  # Rotate -90 degrees around the X axis to align the cylinder along the Z axis
+            gluCylinder(quadric, radius, radius, length, 100, 100)
+            glPopMatrix()
+            #Z Axis (Vert)
+            glColor4f(0, 1, 0, opacity*0.5)
+            glPushMatrix()
+            glTranslatef(0, 0, 0)
+            gluCylinder(quadric, radius*0.75, radius*0.75, length, 100, 100)  # No need for rotation as it's already aligned to the Y axis
+            glPopMatrix()
+            #X-Axis (Rouge)
+            glColor4f(1, 0, 0, opacity*0.5)
+            glPushMatrix()
+            glTranslatef(0, 0, 0)
+            glRotatef(-90, 0, 1, 0)  # Rotate 90 degrees around the Y axis to align the cylinder along the X axis
+            gluCylinder(quadric, radius*0.75, radius*0.75, length, 100, 100)
+            glPopMatrix()
+            glColor4f(1, 1, 1, 1)
+
+
+
+            length = length*2
+            nbre_line = 6
+            position = [0,0,0]
+            glBegin(GL_LINES)
+            grid_spacing = length/nbre_line
+            glColor4f(1,1,1,0.1)
+            for i in range(0, nbre_line+1):
+                offset = i * grid_spacing
+                if i == nbre_line:
+                    glColor4f(1,1,1,0.3)
+
+                # Grid lines parallel to X-axis (both positive and negative Z direction)
+                glVertex3f(position[0] - length, position[1], position[2] + offset)
+                glVertex3f(position[0] + length, position[1], position[2] + offset)
+                
+                glVertex3f(position[0] - length, position[1], position[2] - offset)
+                glVertex3f(position[0] + length, position[1], position[2] - offset)
+
+                # Grid lines parallel to Z-axis (both positive and negative X direction)
+                glVertex3f(position[0] + offset, position[1], position[2] - length)
+                glVertex3f(position[0] + offset, position[1], position[2] + length)
+                
+                glVertex3f(position[0] - offset, position[1], position[2] - length)
+                glVertex3f(position[0] - offset, position[1], position[2] + length)
+            glEnd()
+        glColor4f(1,1,1,1)
+
+        glEnable(GL_TEXTURE_2D)
+        scale = 4
+        scale_radius = 5
+        for obj in self.objects:
+            glBindTexture(GL_TEXTURE_2D, obj.texture.id)
+            glPushMatrix()
+            position_minimap = self.scale_minimap_position(obj.position_simulation,length)
+            glTranslatef(position_minimap[0], position_minimap[1], position_minimap[2])
+            quadric = gluNewQuadric()
+            gluQuadricTexture(quadric, GL_TRUE)
+            gluSphere(quadric, radius*10, 30, 30)
+            glPopMatrix()
+        glDisable(GL_TEXTURE_2D)
+
+        if self.selectedObject is not None:
+            glColor4f(0.3,1,0.3,0.4)
+            glPushMatrix()
+            position_minimap = self.scale_minimap_position(self.selectedObject.position_simulation,length)
+            glTranslatef(position_minimap[0], position_minimap[1], position_minimap[2])
+            quadric = gluNewQuadric()
+            gluSphere(quadric, radius*18, 30, 30)
+            glPopMatrix()
+
+        glColor4f(1,1,1,1)
+
+
 
         # Delete the quadric object when done
-        glColor3f(1, 1, 1)
+        glColor4f(1, 1, 1, 1)
         gluDeleteQuadric(quadric)
 
 
-
+        glDisable(GL_BLEND)
+        #glPopMatrix()
         glPopMatrix()
+        glMatrixMode(GL_PROJECTION)
+        glPopMatrix()
+        glMatrixMode(GL_MODELVIEW)
+        glDisable(GL_DEPTH_TEST)
+
+    def scale_minimap_position(self,position,length):
+        # Convert Cartesian to Spherical
+        x, y, z = position
+        r = np.sqrt(x**2 + y**2 + z**2)
+        theta = np.arctan2(y, x)
+        phi = np.arccos(z / r) if r != 0 else 0
+        
+        # Scale the radial distance
+        k = 0.08
+        r_scaled = length * (np.log(1 + k * r) / np.log(1 + k * self.maxlength))
+        
+        # Convert Spherical back to Cartesian
+        x_scaled = r_scaled * np.sin(phi) * np.cos(theta)
+        y_scaled = r_scaled * np.sin(phi) * np.sin(theta)
+        z_scaled = r_scaled * np.cos(phi)
+        
+        return [x_scaled, y_scaled, z_scaled]
+
 
     def extract_rotation_matrix(self,matrix):
         """
@@ -248,6 +397,8 @@ class RenderTool:
         glTexCoord2f(0, 1)
         glVertex2f(diff_width + offset_x, zoomed_height + offset_y)
         glEnd()
+
+
     
     def move_camera(self):
         
@@ -266,6 +417,7 @@ class RenderTool:
         glRotatef(0, 1, 0, 0)  # Rotation autour de l'axe X
         glRotatef(self.rotation_y+self.rotation_initiale[1], 0, 1, 0)
         glRotatef(self.rotation_x+self.rotation_initiale[2], 0, 0, 1)
+        glRotatef(self.rotation_z, 1, 0, 0)
     
 
         glTranslatef(- x_followObject,- y_followObject,-z_followObject)
@@ -440,7 +592,7 @@ class RenderTool:
         # Drawing the grid with 50% opacity
 
         grid_spacing = length/nbre_line
-        glColor4f(1,1,1,0.1)
+        glColor4f(1,1,1,0.2)
         for i in range(0, nbre_line):
             offset = i * grid_spacing
             

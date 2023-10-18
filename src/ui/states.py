@@ -221,7 +221,8 @@ class SimulationState(BaseState):
             Label(window, 'Simulation', 0.5, 0.9,self.font,(255, 255, 255, 0),4),
             Label(window, f"Simulation Time: {self.simulation_time:.2f} seconds", 0.5, 0.0325,self.font,self.couleur_label,2),
             Label(window, f"Time multiplier: x {self.time_multiplier:,}".replace(","," "), 0.5, 0.0825,self.font,self.couleur_label,2),  
-            Label(self.window, f"Selected object : ", 0.5, 0.1325,self.font,self.couleur_label,2)         
+            Label(self.window, f"Selected object : ", 0.5, 0.1325,self.font,self.couleur_label,2),
+            Label(self.window, f"Rotations", 0.255, 0.0715,self.font,self.couleur_label,1.5)          
                        ]
         
         diff = 0.055
@@ -238,6 +239,9 @@ class SimulationState(BaseState):
             Button(self.window, 0.900, reset_pos, 0.1175, 0.045, "Reset Position", (255, 255, 255),self.font,opacity=20,button_sound="normal"),
             Button(self.window, 0.375, 0.1325, 0.0675, 0.040, "Zoom", (255, 255, 255),self.font,opacity=20,enable=False,button_sound="normal"),
             Button(self.window, 0.900, axes_pos, 0.1175, 0.045, "Axes", (255, 255, 255),self.font,opacity=20,isHighlight=True,isOn=2,button_sound="normal"),
+            Button(self.window, 0.245, restart_pos-0.01, 0.0200, 0.030, "X", (255, 255, 255),self.font,opacity=20,isHighlight=True,isOn=2,button_sound="normal"),
+            Button(self.window, 0.275, restart_pos-0.01, 0.0200, 0.030, "Y", (255, 255, 255),self.font,opacity=20,isHighlight=True,isOn=2,button_sound="normal"),
+            Button(self.window, 0.305, restart_pos-0.01, 0.0200, 0.030, "Z", (255, 255, 255),self.font,opacity=20,isHighlight=True,isOn=2,button_sound="normal"),
             ]
         self.objects = create_celestial_objects(CELESTIAL_PARAMETERS)
         background_image = pyglet.image.load("assets/textures/background.jpg")
@@ -273,6 +277,9 @@ class SimulationState(BaseState):
         self.translation_y = 0
         self.zoom = 0
         self.renderTool.followObjectEnabled = False
+        self.buttons[7].isOn=2#BouttonX
+        self.buttons[7].isOn=2#BouttonY
+        self.buttons[8].isOn=2#BouttonZ
     def restart(self):
         self.reset_positions()
         self.objects = None
@@ -280,6 +287,17 @@ class SimulationState(BaseState):
         self.time_multiplier = 1
         self.simulation_time=0
         self.selected_object = None
+
+    def focus_on_axes(self,axe):
+        diffx,diffy,diffz = 0,0,0
+        if axe == "y":
+            diffz = 90
+
+        if axe == "x":
+            diffy = +90
+        self.rotation_x = -self.renderTool.rotation_initiale[2] + diffx
+        self.rotation_y = -self.renderTool.rotation_initiale[1] + diffy
+        self.rotation_z = -self.renderTool.rotation_initiale[0] + diffz
         
 
     def update_render_tool(self):
@@ -371,6 +389,25 @@ class SimulationState(BaseState):
                     else:
                         self.renderTool.axesEnable = True
                         btn.isOn = 1
+                    btn.play_sound()
+                
+                if btn.text == "X":
+                    btn.isOn=1
+                    self.focus_on_axes("x")
+                    self.buttons[7].isOn=2#BouttonY
+                    self.buttons[8].isOn=2#BouttonZ
+                    btn.play_sound()
+                if btn.text == "Y":
+                    btn.isOn=1
+                    self.focus_on_axes("y")
+                    self.buttons[6].isOn=2#BouttonY
+                    self.buttons[8].isOn=2#BouttonZ
+                    btn.play_sound()
+                if btn.text == "Z":
+                    btn.isOn=1
+                    self.focus_on_axes("z")
+                    self.buttons[7].isOn=2#BouttonY
+                    self.buttons[6].isOn=2#BouttonZ
                     btn.play_sound()
 
 
