@@ -385,6 +385,7 @@ class SimulationState(BaseState):
                 if btn.text == "Axes":
                     if self.renderTool.axesEnable:
                         self.renderTool.axesEnable = False
+                        self.renderTool.axesDrawned = False
                         btn.isOn = 2
                     else:
                         self.renderTool.axesEnable = True

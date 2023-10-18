@@ -42,6 +42,8 @@ class RenderTool:
 
         #Axe et plane
         self.axesEnable = False
+        self.axesDrawned = False
+        self.frame_counter_axes = 0
         self.planeEnable = True
         self.followLineEnable = True
         self.maxlength = 5
@@ -593,22 +595,35 @@ class RenderTool:
 
         grid_spacing = length/nbre_line
         glColor4f(1,1,1,0.2)
+
+        temps = 10
+        if not self.axesDrawned:
+            dynamic_offset_factor = self.frame_counter_axes/temps
+            self.frame_counter_axes+=1
+            if self.frame_counter_axes >= temps:
+                self.axesDrawned = True
+        else:
+            dynamic_offset_factor = 1
+
+
+
         for i in range(0, nbre_line):
             offset = i * grid_spacing
+            dynamic_offset = offset*dynamic_offset_factor
             
             # Grid lines parallel to X-axis (both positive and negative Z direction)
-            glVertex3f(position[0] - length, position[1], position[2] + offset)
-            glVertex3f(position[0] + length, position[1], position[2] + offset)
+            glVertex3f(position[0] - length, position[1], position[2] + dynamic_offset)
+            glVertex3f(position[0] + length, position[1], position[2] + dynamic_offset)
             
-            glVertex3f(position[0] - length, position[1], position[2] - offset)
-            glVertex3f(position[0] + length, position[1], position[2] - offset)
+            glVertex3f(position[0] - length, position[1], position[2] - dynamic_offset)
+            glVertex3f(position[0] + length, position[1], position[2] - dynamic_offset)
 
             # Grid lines parallel to Z-axis (both positive and negative X direction)
-            glVertex3f(position[0] + offset, position[1], position[2] - length)
-            glVertex3f(position[0] + offset, position[1], position[2] + length)
+            glVertex3f(position[0] + dynamic_offset, position[1], position[2] - length)
+            glVertex3f(position[0] + dynamic_offset, position[1], position[2] + length)
             
-            glVertex3f(position[0] - offset, position[1], position[2] - length)
-            glVertex3f(position[0] - offset, position[1], position[2] + length)
+            glVertex3f(position[0] - dynamic_offset, position[1], position[2] - length)
+            glVertex3f(position[0] - dynamic_offset, position[1], position[2] + length)
 
 
         glColor4f(1,1,1,1)
@@ -767,6 +782,8 @@ class RenderTool:
             self.follow_line(self.selectedObject.position_simulation)
         if self.axesEnable:
             self.draw_axes()
+        else:
+            self.frame_counter_axes=0
         #Path of objects:
         self.draw_planet_path()
 
