@@ -13,6 +13,7 @@ class Button:
         self.width_rel = width_rel
         self.height_rel = height_rel
         self.text = text
+        self.id = text
         self.color = color
         self.rectangle = None
         self.label = None

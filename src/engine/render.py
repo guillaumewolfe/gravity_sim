@@ -40,6 +40,7 @@ class RenderTool:
         self.axesEnable = False
         self.planeEnable = True
         self.followLineEnable = True
+        self.maxlength = 5
 
 
 
@@ -349,44 +350,56 @@ class RenderTool:
 
 
     def draw_axes(self, length=50, position = [0,0,0]):
-
-        glEnable(GL_LINE_STIPPLE)
-        basic_pattern = [0xAAAA,0xEAEA,0x5555,0x7575,0xAAAA,0xD5D5,0x5555,0xB5B5]
-        index = int(self.frame_counter/5)%len(basic_pattern)
-        stipple_pattern = basic_pattern[index]
-        glLineStipple(4,stipple_pattern&0xFFFF)
-        glLineStipple(4,0xAAAA)
-        glDisable(GL_LINE_STIPPLE)
-
-
+        nbre_line = 20
         glBegin(GL_LINES)
+        length = self.maxlength
 
         glColor4f(1,1,1,0.5)
+        #Axe X
+        glVertex3f(position[0],position[1],position[2])
+        glVertex3f(position[0]+length,position[1],position[2])
+        
+        #Axe Z
+        glVertex3f(position[0],position[1],position[2])
+        glVertex3f(position[0],position[1],position[2]+length)
+        
+        #Axe Y
+        glVertex3f(position[0],position[1],position[2])
+        glVertex3f(position[0],position[1]+length,position[2])
+        # Drawing the grid with 50% opacity
 
-
-        if self.axesEnable:
-            #Axe X
-            glVertex3f(position[0],position[1],position[2])
-            glVertex3f(position[0]+length,position[1],position[2])
+        grid_spacing = length/nbre_line
+        glColor4f(1,1,1,0.1)
+        for i in range(0, nbre_line):
+            offset = i * grid_spacing
             
-            #Axe Z
-            glVertex3f(position[0],position[1],position[2])
-            glVertex3f(position[0],position[1],position[2]+length)
+            # Grid lines parallel to X-axis (both positive and negative Z direction)
+            glVertex3f(position[0] - length, position[1], position[2] + offset)
+            glVertex3f(position[0] + length, position[1], position[2] + offset)
             
-            #Axe Y
-            glVertex3f(position[0],position[1],position[2])
-            glVertex3f(position[0],position[1]+length,position[2])
+            glVertex3f(position[0] - length, position[1], position[2] - offset)
+            glVertex3f(position[0] + length, position[1], position[2] - offset)
 
+            # Grid lines parallel to Z-axis (both positive and negative X direction)
+            glVertex3f(position[0] + offset, position[1], position[2] - length)
+            glVertex3f(position[0] + offset, position[1], position[2] + length)
+            
+            glVertex3f(position[0] - offset, position[1], position[2] - length)
+            glVertex3f(position[0] - offset, position[1], position[2] + length)
+
+
+        glColor4f(1,1,1,1)
+        glEnd()
+
+    def follow_line(self,position):
+        glBegin(GL_LINES)
         glColor4f(1,1,1,0.6)
         #Lign from the sun to the object
         if self.followLineEnable:
             glVertex3f(0,0,0)
             glVertex3f(position[0],position[1],position[2])
-
-
         glColor4f(1,1,1,1)
         glEnd()
-        glDisable(GL_LINE_STIPPLE)
 
 
 
@@ -528,7 +541,9 @@ class RenderTool:
          #Highlight selected object
         if self.selectedObject:
             self.draw_highlight(self.selectedObject)
-            self.draw_axes(position=self.selectedObject.position_simulation)
+            self.follow_line(self.selectedObject.position_simulation)
+        if self.axesEnable:
+            self.draw_axes()
         #Path of objects:
         self.draw_planet_path()
 

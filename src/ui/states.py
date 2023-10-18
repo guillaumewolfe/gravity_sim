@@ -243,6 +243,15 @@ class SimulationState(BaseState):
         background_image = pyglet.image.load("assets/textures/background.jpg")
         self.background_texture = background_image.get_texture()
         self.renderTool = render.RenderTool(window,self.labels,self.buttons,self.objects,self.rotation_x,self.rotation_y,self.rotation_z,self.translation_x,self.translation_y,self.zoom,self.background_texture)
+        self.renderTool.maxlength = self.max_length()
+        print(self.max_length())
+    def max_length(self):
+        maxd = 0
+        for obj in self.objects:
+            distance = (obj.position_simulation[0]**2+obj.position_simulation[1]**2+obj.position_simulation[0]**2)**0.5
+            if distance > maxd:
+                maxd = distance
+        return maxd
     def enter(self):
         pass
 
@@ -355,6 +364,18 @@ class SimulationState(BaseState):
                     self.reset_positions()
                     self.renderTool.followObjectEnabled = True
                     self.renderTool.followObject = self.renderTool.selectedObject
+
+                if btn.text == "Axes":
+                    if self.renderTool.axesEnable:
+                        self.renderTool.axesEnable = False
+                        btn.isOn = 2
+                    else:
+                        self.renderTool.axesEnable = True
+                        btn.isOn = 1
+                    btn.play_sound()
+
+
+
         if not buttonClicked and not isAjusting:
             self.check_selection(x,y)
                         
