@@ -221,7 +221,7 @@ class SimulationState(BaseState):
             Label(window, 'Simulation', 0.5, 0.9,self.font,(255, 255, 255, 0),4),
             Label(window, f"Simulation Time: {self.simulation_time:.2f} seconds", 0.5, 0.0325,self.font,self.couleur_label,2),
             Label(window, f"Time multiplier: x {self.time_multiplier:,}".replace(","," "), 0.5, 0.0825,self.font,self.couleur_label,2),  
-            Label(self.window, f"Selected object : ", 0.5, 0.1325,self.font,self.couleur_label,2),
+            #Label(self.window, f"Selected object : ", 0.5, 0.1325,self.font,self.couleur_label,2),
             Label(self.window, f"Rotations", 0.255, 0.0715,self.font,self.couleur_label,1.5)          
                        ]
         
@@ -237,7 +237,7 @@ class SimulationState(BaseState):
             Button(self.window, 0.900, restart_pos, 0.1175, 0.045, "Restart", (255, 255, 255),self.font,opacity=20,button_sound="normal"),
             Button(self.window, 0.9, pause_pos, 0.1175, 0.045, "Pause", (255, 255, 255),self.font,opacity=20,button_sound="normal"),
             Button(self.window, 0.900, reset_pos, 0.1175, 0.045, "Reset Position", (255, 255, 255),self.font,opacity=20,button_sound="normal"),
-            Button(self.window, 0.375, 0.1325, 0.0675, 0.040, "Zoom", (255, 255, 255),self.font,opacity=20,enable=False,button_sound="normal"),
+            Button(self.window, 0.9, axes_pos+0.15, 0.0675, 0.040, "Zoom", (255, 255, 255),self.font,opacity=20,enable=False,button_sound="normal"),
             Button(self.window, 0.900, axes_pos, 0.1175, 0.045, "Axes", (255, 255, 255),self.font,opacity=20,isHighlight=True,isOn=2,button_sound="normal"),
             Button(self.window, 0.245, restart_pos-0.01, 0.0200, 0.030, "X", (255, 255, 255),self.font,opacity=20,isHighlight=True,isOn=2,button_sound="normal"),
             Button(self.window, 0.275, restart_pos-0.01, 0.0200, 0.030, "Y", (255, 255, 255),self.font,opacity=20,isHighlight=True,isOn=2,button_sound="normal"),
@@ -246,7 +246,7 @@ class SimulationState(BaseState):
         self.objects = create_celestial_objects(CELESTIAL_PARAMETERS)
         background_image = pyglet.image.load("assets/textures/background.jpg")
         self.background_texture = background_image.get_texture()
-        self.renderTool = render.RenderTool(window,self.labels,self.buttons,self.objects,self.rotation_x,self.rotation_y,self.rotation_z,self.translation_x,self.translation_y,self.zoom,self.background_texture)
+        self.renderTool = render.RenderTool(window,self.labels,self.buttons,self.objects,self.rotation_x,self.rotation_y,self.rotation_z,self.translation_x,self.translation_y,self.zoom,self.background_texture,font=self.font)
         self.renderTool.maxlength = self.max_length()
     def max_length(self):
         maxd = 0
@@ -267,8 +267,8 @@ class SimulationState(BaseState):
             self.simulation_time += dt * self.time_multiplier
             physics.update_physics(self.objects,dt* self.time_multiplier)
         self.labels[1] = Label(self.window, f"Simulation Time: {self.simulation_time/86400:.2f} jours", 0.5, 0.0325, self.font, self.couleur_label, 2)
-        self.labels[2] = Label(self.window, f"Time multiplier: x {self.time_multiplier:,}".replace(","," "), 0.5, 0.0825,self.font,self.couleur_label,2)
-        self.labels[3] = Label(self.window, f"Selected object: {text}", 0.5, 0.1325,self.font,self.couleur_label,2)
+        self.labels[2] = Label(self.window, f"Speed: x {self.time_multiplier:,}".replace(","," "), 0.5, 0.0825,self.font,self.couleur_label,2)
+        #self.labels[3] = Label(self.window, f"Selected object: {text}", 0.5, 0.1325,self.font,self.couleur_label,2)
     def reset_positions(self):
         self.rotation_x = 0 
         self.rotation_y = 0 
@@ -288,6 +288,15 @@ class SimulationState(BaseState):
         self.simulation_time=0
         self.selected_object = None
 
+    def rotation(self, dx, dy,dz):
+        # Mettez à jour les angles de rotation en fonction du mouvement de la souris
+        sensitivity = 0.5
+        self.rotation_x += dy * sensitivity
+        self.rotation_y += dx * sensitivity   
+        self.rotation_z += dz * sensitivity   
+        self.buttons[7].isOn=2#BouttonX
+        self.buttons[7].isOn=2#BouttonY
+        self.buttons[8].isOn=2#BouttonZ
     def focus_on_axes(self,axe):
         diffx,diffy,diffz = 0,0,0
         if axe == "y":

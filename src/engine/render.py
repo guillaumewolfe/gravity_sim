@@ -7,15 +7,20 @@ from ctypes import c_char_p,POINTER,c_int,cast
 from pyglet import shapes
 import ctypes
 import numpy as np
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+from src.ui.pyglet_objects import Label,Button
 
 class RenderTool:
-    def __init__(self,window, labels, buttons, objects, rotation_x, rotation_y, rotation_z, translation_x,translation_y,zoom,backgroundTexture):
+    def __init__(self,window, labels, buttons, objects, rotation_x, rotation_y, rotation_z, translation_x,translation_y,zoom,backgroundTexture,font=None):
         #Fenêtre
         self.window = window
         #Objects
         self.objects = objects
         self.labels = labels
         self.buttons = buttons
+        self.font = font
 
         #Camera settings
         self.rotation_x = rotation_x
@@ -639,7 +644,28 @@ class RenderTool:
         glColor4f(1,1,1,1)
         glEnd()
 
+    def draw_selected_object_infos(self,object):
+        y=0.38
+        x=0.82
+        largeur = 0.16
+        hauteur = 0.45
+        padding = 4
+        rec  = shapes.Rectangle(self.window.width*x, self.window.height*y, self.window.width*largeur, self.window.height*hauteur, color=(41,50,69))
+        rec2  = shapes.Rectangle(self.window.width*x-padding/2, self.window.height*y-padding/2, self.window.width*largeur+padding, self.window.height*hauteur+padding, color=(255,255,255))
+        rec.opacity = 120
+        rec2.opacity = 20
+        rec.draw()
+        rec2.draw()
+        centrer_x = x + largeur/2
+        centrer_y = y+hauteur-0.035
+        info_x = x + 0.06
+        centrer_y2 = centrer_y-0.05
+        diff_y = 0.032
 
+        Label(self.window, f'{object.name}', centrer_x, centrer_y,self.font,(255, 255, 255, 200),3).draw()
+        #Label(self.window, f'X : {object.real_position[0]:.2E} km', info_x, centrer_y2-diff_y,self.font,(255, 255, 255, 200),1.5).draw()
+        #Label(self.window, f'Y : {object.real_position[1]:.2E} km', info_x, centrer_y2-2*diff_y,self.font,(255, 255, 255, 200),1.5).draw()
+        #Label(self.window, f'Z : {object.real_position[2]:.2E} km', info_x, centrer_y2-3*diff_y,self.font,(255, 255, 255, 200),1.5).draw()
 
     def draw_highlight(self, obj):
         scale_factor = 0.5 * math.sin(2 * math.pi * self.frame_counter / 90) + 0.5  # This oscillates between 0 and 1 over 60 frames
@@ -651,7 +677,7 @@ class RenderTool:
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
 
-        glColor4f(colors[0]/255, colors[1]/255, colors[2]/255, 0.15)
+        glColor4f(colors[0]/255, colors[1]/255, colors[2]/255, 0.10)
         
 
         glPushMatrix()
@@ -789,6 +815,7 @@ class RenderTool:
 
         #Remise en 2D
         self.setup_2d_projection()
+        if self.selectedObject:self.draw_selected_object_infos(self.selectedObject)
         self.draw_minimap()
         
 
