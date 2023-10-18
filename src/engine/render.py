@@ -2,7 +2,9 @@ from pyglet.gl import *
 from pyglet.text import Label
 import math
 from engine_tools.FrameBuffer import FrameBuffer
+from engine_tools.minimap import Minimap
 from ctypes import c_char_p,POINTER,c_int,cast
+from pyglet import shapes
 
 class RenderTool:
     def __init__(self,window, labels, buttons, objects, rotation_x, rotation_y, rotation_z, translation_x,translation_y,zoom,backgroundTexture):
@@ -44,6 +46,7 @@ class RenderTool:
 
 
 
+
         #Background
         self.bg_texture1 = pyglet.image.load('assets/textures/background_alpha1.png').get_texture()
         self.bg_texture2 = pyglet.image.load('assets/textures/background2.jpg').get_texture()
@@ -66,6 +69,46 @@ class RenderTool:
         self.translation_y = translation_y
         self.zoom = zoom
 
+    def draw_minimap(self):
+        padding = 1
+        rec  = shapes.Rectangle(0, 0, self.window.width*0.25, self.window.height*0.25, color=(1,1,1))
+        rec2  = shapes.Rectangle(0, 0, self.window.width*0.25+2*padding, self.window.height*0.25+2*padding, color=(255,255,255))
+        x_rel = 0.01
+        y_rel = 0.02
+        x = self.window.width * x_rel 
+        y = self.window.height * y_rel 
+        
+        rec.x = x
+        rec.y = y
+        rec2.x = x - padding
+        rec2.y = y - padding
+        rec2.opacity = 10
+        rec.opacity = 200
+        rec2.draw()
+        rec.draw()
+        length = 5
+        
+        # Draw X-axis (Red)
+        glColor3f(1, 0, 0)
+        glBegin(GL_LINES)
+        glVertex3f(0, 0, 0)
+        glVertex3f(length, 0, 0)
+        glEnd()
+
+        # Draw Y-axis (Green)
+        glColor3f(0, 1, 0)
+        glBegin(GL_LINES)
+        glVertex3f(0, 0, 0)
+        glVertex3f(0, length, 0)
+        glEnd()
+
+        # Draw Z-axis (Blue)
+        glColor3f(0, 0, 1)
+        glBegin(GL_LINES)
+        glVertex3f(0, 0, 0)
+        glVertex3f(0, 0, length)
+        glColor3f(1, 1, 1)
+        glEnd()
 
 
     def setup_2d_projection(self):
@@ -550,6 +593,8 @@ class RenderTool:
 
         #Remise en 2D
         self.setup_2d_projection()
+        
+        self.draw_minimap()
 
         #Dessiner bouttons + Labels
         self.draw_pyglet_objects()

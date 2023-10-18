@@ -20,8 +20,9 @@ class Button:
         self.font=font
         self.hover = False
         self.opacity = opacity
+        
+        #Sounds
         self.sounds = {}
-
         self.sounds["normal"] = pyglet.media.load('assets/sounds/normal_button.mp3', streaming=False)
         self.sounds["start"] = pyglet.media.load('assets/sounds/normal_button.mp3', streaming=False)
         self.sounds["menu"] = pyglet.media.load('assets/sounds/menu.mp3', streaming=False)
@@ -29,14 +30,8 @@ class Button:
         self.sounds["hover"] = pyglet.media.load('assets/sounds/select.wav', streaming=False)
         self.sounds["warning"] = pyglet.media.load('assets/sounds/warning_click.wav', streaming=False)
         self.sounds["selectionPlanete"] = pyglet.media.load('assets/sounds/selection_planete.wav', streaming=False)
-
-
-        self.menuSound = pyglet.media.load('assets/sounds/menu.mp3', streaming=False)
-        self.closeSound = pyglet.media.load('assets/sounds/close.mp3', streaming=False)
+        
         self.hoverSound = pyglet.media.load('assets/sounds/select.wav', streaming=False)
-        self.warningSound = pyglet.media.load('assets/sounds/warning_click.wav', streaming=False)
-        self.selectionPlaneteSound = pyglet.media.load('assets/sounds/selection_planete.wav', streaming=False)
-
         self.ButtonSound = self.sounds[button_sound]
 
         self.click_color = (32, 247, 173, 255)

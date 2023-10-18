@@ -244,7 +244,6 @@ class SimulationState(BaseState):
         self.background_texture = background_image.get_texture()
         self.renderTool = render.RenderTool(window,self.labels,self.buttons,self.objects,self.rotation_x,self.rotation_y,self.rotation_z,self.translation_x,self.translation_y,self.zoom,self.background_texture)
         self.renderTool.maxlength = self.max_length()
-        print(self.max_length())
     def max_length(self):
         maxd = 0
         for obj in self.objects:
@@ -412,7 +411,6 @@ class LoadingState(BaseState):
     
     def exit(self):
         if self.loading_animation:
-            print("exit")
             self.videoPlayer.pause()
             self.videoPlayer.delete()
 
