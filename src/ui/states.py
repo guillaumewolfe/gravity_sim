@@ -113,9 +113,9 @@ class StartMenuState(BaseState):
         ]
 
         self.buttons = [
-            Button(self.window, 0.5, 0.20, 0.15, 0.05, "Start", (255, 255, 255),self.font,opacity=50),
-            Button(self.window, 0.5, 0.14, 0.15, 0.05, "Options", (255, 255, 255),self.font,opacity=50),
-            Button(self.window, 0.5, 0.08, 0.15, 0.05, "Close", (255, 255,255),self.font,opacity=50)
+            Button(self.window, 0.5, 0.20, 0.15, 0.05, "Start", (255, 255, 255),self.font,opacity=50,button_sound="start"),
+            Button(self.window, 0.5, 0.14, 0.15, 0.05, "Options", (255, 255, 255),self.font,opacity=50,button_sound="normal"),
+            Button(self.window, 0.5, 0.08, 0.15, 0.05, "Close", (255, 255,255),self.font,opacity=50,button_sound="close")
         ]
 
     def enter(self):
@@ -177,11 +177,11 @@ class StartMenuState(BaseState):
             btn.unclick()
             if btn.contains_point(x, y):
                 if btn.text == "Start":
-                    btn.play_sound("start")
+                    btn.play_sound()
                     self.draw()
                     self.switch_state(SimulationState)
                 elif btn.text == "Close":
-                    btn.play_sound("close")
+                    btn.play_sound()
                     pyglet.clock.schedule_once(lambda dt:self.close_app(),0.8)
                     self.close_app()
 
@@ -229,13 +229,15 @@ class SimulationState(BaseState):
         reset_pos = restart_pos+diff
         menu_pos = restart_pos+2*diff
         pause_pos = restart_pos+3*diff
+        axes_pos = restart_pos+4*diff
 
         self.buttons = [
-            Button(self.window, 0.900, menu_pos, 0.1175, 0.045, "Menu", (255, 255, 255),self.font,opacity=20),
-            Button(self.window, 0.900, restart_pos, 0.1175, 0.045, "Restart", (255, 255, 255),self.font,opacity=20),
-            Button(self.window, 0.9, pause_pos, 0.1175, 0.045, "Pause", (255, 255, 255),self.font,opacity=20),
-            Button(self.window, 0.900, reset_pos, 0.1175, 0.045, "Reset Position", (255, 255, 255),self.font,opacity=20),
-            Button(self.window, 0.375, 0.1325, 0.0675, 0.040, "Zoom", (255, 255, 255),self.font,opacity=20,enable=False),
+            Button(self.window, 0.900, menu_pos, 0.1175, 0.045, "Menu", (255, 255, 255),self.font,opacity=20,button_sound="menu"),
+            Button(self.window, 0.900, restart_pos, 0.1175, 0.045, "Restart", (255, 255, 255),self.font,opacity=20,button_sound="normal"),
+            Button(self.window, 0.9, pause_pos, 0.1175, 0.045, "Pause", (255, 255, 255),self.font,opacity=20,button_sound="normal"),
+            Button(self.window, 0.900, reset_pos, 0.1175, 0.045, "Reset Position", (255, 255, 255),self.font,opacity=20,button_sound="normal"),
+            Button(self.window, 0.375, 0.1325, 0.0675, 0.040, "Zoom", (255, 255, 255),self.font,opacity=20,enable=False,button_sound="normal"),
+            Button(self.window, 0.900, axes_pos, 0.1175, 0.045, "Axes", (255, 255, 255),self.font,opacity=20,isHighlight=True,isOn=2,button_sound="normal"),
             ]
         self.objects = create_celestial_objects(CELESTIAL_PARAMETERS)
         background_image = pyglet.image.load("assets/textures/background.jpg")
@@ -312,10 +314,10 @@ class SimulationState(BaseState):
         for btn in self.buttons:
             if btn.text == "Pause":
                 btn.text = "Resume"
-                btn.play_sound("normal")
+                btn.play_sound()
             elif btn.text == "Resume":
                 btn.text = "Pause"
-                btn.play_sound("normal")
+                btn.play_sound()
                 
         if self.isPaused:
             self.isPaused=False
@@ -331,12 +333,12 @@ class SimulationState(BaseState):
             if btn.contains_point(x, y):
                 buttonClicked = True
                 if btn.text == "Menu":
-                    btn.play_sound("menu")
+                    btn.play_sound()
                     self.switch_state(StartMenuState)
 
                     
                 if btn.text == "Restart":
-                    btn.play_sound("normal")
+                    btn.play_sound()
                     self.restart()
 
 
@@ -345,7 +347,7 @@ class SimulationState(BaseState):
 
                 
                 if btn.text == "Reset Position":
-                    btn.play_sound("normal")
+                    btn.play_sound()
                     self.reset_positions()
                 
 
