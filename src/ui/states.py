@@ -225,7 +225,7 @@ class SimulationState(BaseState):
                        ]
         
         diff = 0.055
-        restart_pos = 0.0925
+        restart_pos = 0.0425
         reset_pos = restart_pos+diff
         menu_pos = restart_pos+2*diff
         pause_pos = restart_pos+3*diff

@@ -5,6 +5,7 @@ from engine_tools.FrameBuffer import FrameBuffer
 from engine_tools.minimap import Minimap
 from ctypes import c_char_p,POINTER,c_int,cast
 from pyglet import shapes
+import ctypes
 
 class RenderTool:
     def __init__(self,window, labels, buttons, objects, rotation_x, rotation_y, rotation_z, translation_x,translation_y,zoom,backgroundTexture):
@@ -86,29 +87,74 @@ class RenderTool:
         rec.opacity = 200
         rec2.draw()
         rec.draw()
-        length = 5
-        
-        # Draw X-axis (Red)
+
+        glPushMatrix()
+        glTranslatef(rec.x+self.window.width*0.25/2, rec.y+self.window.height*0.25/2, 0)  # Translate to the position of the rectangle
+        self.rotation_matrix = self.extract_rotation_matrix(self.matrix)
+        glMultMatrixd(self.rotation_matrix)
+
+       
+        radius = 3
+        length = 100
+        # Create a GLU quadric object
+        quadric = gluNewQuadric()
+
+        # X-axis (Red)
         glColor3f(1, 0, 0)
-        glBegin(GL_LINES)
-        glVertex3f(0, 0, 0)
-        glVertex3f(length, 0, 0)
-        glEnd()
+        glPushMatrix()
+        glTranslatef(0, 0, 0)
+        glRotatef(90, 0, 1, 0)  # Rotate 90 degrees around the Y axis to align the cylinder along the X axis
+        gluCylinder(quadric, radius, radius, length, 32, 1)
+        glPopMatrix()
 
-        # Draw Y-axis (Green)
+        # Y-axis (Green)
         glColor3f(0, 1, 0)
-        glBegin(GL_LINES)
-        glVertex3f(0, 0, 0)
-        glVertex3f(0, length, 0)
-        glEnd()
+        glPushMatrix()
+        glTranslatef(0, 0, 0)
+        gluCylinder(quadric, radius, radius, length, 32, 1)  # No need for rotation as it's already aligned to the Y axis
+        glPopMatrix()
 
-        # Draw Z-axis (Blue)
+        # Z-axis (Blue)
         glColor3f(0, 0, 1)
-        glBegin(GL_LINES)
-        glVertex3f(0, 0, 0)
-        glVertex3f(0, 0, length)
+        glPushMatrix()
+        glTranslatef(0, 0, 0)
+        glRotatef(-90, 1, 0, 0)  # Rotate -90 degrees around the X axis to align the cylinder along the Z axis
+        gluCylinder(quadric, radius, radius, length, 32, 1)
+        glPopMatrix()
+
+        # Delete the quadric object when done
         glColor3f(1, 1, 1)
-        glEnd()
+        gluDeleteQuadric(quadric)
+
+
+
+        glPopMatrix()
+
+    def extract_rotation_matrix(self,matrix):
+        """
+        Extract the rotational component from a 4x4 matrix.
+        """
+        rotation_only_matrix = (ctypes.c_double*16)()
+
+        
+        # Copy the rotational components (3x3 upper-left corner)
+        rotation_only_matrix[0] = matrix[0]
+        rotation_only_matrix[1] = matrix[1]
+        rotation_only_matrix[2] = matrix[2]
+        
+        rotation_only_matrix[4] = matrix[4]
+        rotation_only_matrix[5] = matrix[5]
+        rotation_only_matrix[6] = matrix[6]
+        
+        rotation_only_matrix[8] = matrix[8]
+        rotation_only_matrix[9] = matrix[9]
+        rotation_only_matrix[10] = matrix[10]
+        
+        # Set the homogeneous coordinates to make it a valid 4x4 matrix
+        rotation_only_matrix[15] = 1.0
+        
+        return rotation_only_matrix
+
 
 
     def setup_2d_projection(self):
@@ -128,20 +174,6 @@ class RenderTool:
         gluPerspective(35, self.window.width/self.window.height, 1, 1000)
         glMatrixMode(GL_MODELVIEW)
 
-    def calculate_camera_vectors(self):
-        # Supposons que les vecteurs sont à une distance fixe de la caméra (par exemple, 2 unités)
-        distance = 1.0
-
-        # Convertissez les rotations en radians
-        rotation_x_rad = math.radians(self.rotation_x)
-        rotation_y_rad = math.radians(self.rotation_y)
-
-        # Calculez les coordonnées dans l'espace de la caméra en utilisant les angles de rotation
-        camera_x = distance * math.sin(rotation_y_rad) * math.cos(rotation_x_rad)
-        camera_y = -distance * math.sin(rotation_x_rad)
-        camera_z = -distance * math.cos(rotation_y_rad) * math.cos(rotation_x_rad)
-
-        return camera_x, camera_y, camera_z
     
 
 
@@ -237,6 +269,8 @@ class RenderTool:
         glTranslatef(- x_followObject,- y_followObject,-z_followObject)
 
         #Rotation selon le mouvement
+        self.matrix = (GLdouble*16)()
+        glGetDoublev(GL_MODELVIEW_MATRIX,self.matrix)
 
     def draw_pyglet_objects(self):
         for label in self.labels:
@@ -245,14 +279,6 @@ class RenderTool:
             btn.update_position()
             btn.draw()
     
-    def draw_camera_coordinates(self):
-        camera_x, camera_y, camera_z = self.calculate_camera_vectors()
-        label_x = Label(f'X: {camera_x:.2f}', font_name='Arial', font_size=12, x=self.window.width - 200, y=10, anchor_x='right', anchor_y='bottom', color=(255, 255, 255, 255))
-        label_y = Label(f'Y: {camera_y:.2f}', font_name='Arial', font_size=12, x=self.window.width - 120, y=10, anchor_x='right', anchor_y='bottom', color=(255, 255, 255, 255))
-        label_z = Label(f'Z: {camera_z:.2f}', font_name='Arial', font_size=12, x=self.window.width - 40, y=10, anchor_x='right', anchor_y='bottom', color=(255, 255, 255, 255))
-        label_x.draw()
-        label_y.draw()
-        label_z.draw()
 
     def selection_mode(self,x,y):
 
@@ -599,8 +625,6 @@ class RenderTool:
         #Dessiner bouttons + Labels
         self.draw_pyglet_objects()
 
-        #Dessiner les coordonnées de la caméra
-        self.draw_camera_coordinates()
 
         #self.frameBuffer.draw(0,0)
 
