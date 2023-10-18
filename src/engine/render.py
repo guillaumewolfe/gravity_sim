@@ -88,23 +88,24 @@ class RenderTool:
         rec2.draw()
         rec.draw()
 
+        
+        
         glPushMatrix()
         glTranslatef(rec.x+self.window.width*0.25/2, rec.y+self.window.height*0.25/2, 0)  # Translate to the position of the rectangle
         self.rotation_matrix = self.extract_rotation_matrix(self.matrix)
         glMultMatrixd(self.rotation_matrix)
 
-       
+        
         radius = 3
         length = 100
         # Create a GLU quadric object
         quadric = gluNewQuadric()
-
         # X-axis (Red)
         glColor3f(1, 0, 0)
         glPushMatrix()
         glTranslatef(0, 0, 0)
         glRotatef(90, 0, 1, 0)  # Rotate 90 degrees around the Y axis to align the cylinder along the X axis
-        gluCylinder(quadric, radius, radius, length, 32, 1)
+        gluCylinder(quadric, radius, radius, length, 32, 32)
         glPopMatrix()
 
         # Y-axis (Green)
@@ -168,10 +169,11 @@ class RenderTool:
 
 
     def setup_3d_projection(self):
+        glViewport(0, 0, self.window.width, self.window.height)
         glEnable(GL_DEPTH_TEST)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        gluPerspective(35, self.window.width/self.window.height, 1, 1000)
+        gluPerspective(35, self.window.width/self.window.height, 1, self.maxlength)
         glMatrixMode(GL_MODELVIEW)
 
     
@@ -213,8 +215,8 @@ class RenderTool:
         self.draw_quad_with_offset(offset_x2,offset_y2,2)
 
 
-        offset_x3 = self.translation_x * 2 + rotation_offset_x*20
-        offset_y3 = self.translation_y * 2 + rotation_offset_y*20
+        offset_x3 = self.translation_x * 2 - rotation_offset_x*20
+        offset_y3 = self.translation_y * 2 - rotation_offset_y*20
 
         glBindTexture(GL_TEXTURE_2D, self.background_texture.id)
         self.draw_quad_with_offset(offset_x3,offset_y3,2)
@@ -616,11 +618,10 @@ class RenderTool:
         #Path of objects:
         self.draw_planet_path()
 
-
         #Remise en 2D
         self.setup_2d_projection()
-        
         self.draw_minimap()
+        
 
         #Dessiner bouttons + Labels
         self.draw_pyglet_objects()
