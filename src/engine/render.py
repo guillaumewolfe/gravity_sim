@@ -11,11 +11,13 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 from src.ui.pyglet_objects import Label,Button
+from src.ui.states import SimulationState
 
 class RenderTool:
-    def __init__(self,window, labels, buttons, objects, rotation_x, rotation_y, rotation_z, translation_x,translation_y,zoom,backgroundTexture,font=None):
+    def __init__(self,window, labels, buttons, objects, rotation_x, rotation_y, rotation_z, translation_x,translation_y,zoom,backgroundTexture,font=None,SimulationState = None):
         #Fenêtre
         self.window = window
+        self.SimulationState = SimulationState
         #Objects
         self.objects = objects
         self.labels = labels
@@ -238,6 +240,7 @@ class RenderTool:
             glPushMatrix()
             position_minimap = self.scale_minimap_position(obj.position_simulation,length)
             glTranslatef(position_minimap[0], position_minimap[1], position_minimap[2])
+            glRotatef(obj.rotation_siderale_angle,*obj.rotation_direction)
             quadric = gluNewQuadric()
             gluQuadricTexture(quadric, GL_TRUE)
             gluSphere(quadric, radius*10, 30, 30)
@@ -464,8 +467,15 @@ class RenderTool:
 
         color_id = (output_buffer[0],output_buffer[1],output_buffer[2])
 
-
-
+        if color_id ==(0, 0, 50):#X
+            self.SimulationState.focus_on_axes("x")
+        elif color_id ==(0, 0, 150):#Y
+            self.SimulationState.focus_on_axes("y")
+        elif color_id ==(0, 0, 100):#Z
+            self.SimulationState.focus_on_axes("z")
+        
+        
+        
         if color_id[2]>200 : return None
 
         self.selectedObject = self.get_object_by_color_id(color_id)
@@ -523,7 +533,7 @@ class RenderTool:
 
 
         # Ajuster les limites horizontales en fonction du rapport d'aspect
-        half_width = half_height * aspect_ratio
+        half_width = half_height * aspect_ratio*0.60
         left = -half_width
         right = half_width
         near, far = -100, 100
@@ -538,9 +548,9 @@ class RenderTool:
         self.rotation_matrix = self.extract_rotation_matrix(self.matrix)
         glMultMatrixd(self.rotation_matrix)
         
-        radius = 0.075
+        radius = 1
         length = 22
-        """quadric = gluNewQuadric()  # If you don't have this, add it at the beginning
+        quadric = gluNewQuadric()  # If you don't have this, add it at the beginning
     
         # X-axis (Red)
         glColor3f(0, 0, 50/255.0)  # RGB for X axis color
@@ -564,10 +574,10 @@ class RenderTool:
         glTranslatef(0, 0, 0)
         glRotatef(-90, 1, 0, 0)  # Rotate -90 degrees around the X axis to align the cylinder along the Z axis
         gluCylinder(quadric, radius, radius, length, 100, 100)
-        glPopMatrix()"""
+        glPopMatrix()
 
 
-
+        radius = 0.075*2
         # Effacer le tampon
         glClearColor(0, 0, 1, 1)  # RGB pour bleu
         #glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)

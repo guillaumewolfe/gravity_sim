@@ -10,7 +10,7 @@ isAjusting = False
 def handle_input(window, current_state):
     @window.event
     def on_mouse_press(x, y, button, modifiers):
-        print(f"x : {x/window.width}     y : {y/window.height}")
+        #print(f"x : {x/window.width}     y : {y/window.height}")
         global isMousePressed
         isMousePressed = True
         current_state.on_mouse_press(x, y, button, modifiers)
