@@ -40,6 +40,13 @@ class CelestialObject:
     def calculate_distance_parcourue(self):
         if len(self.distance_list) == 0: return 0
         return sum(self.distance_list)
+    def get_velocity(self):
+        return (self.velocity[0]**2+self.velocity[1]**2+self.velocity[2]**2)**(0.5)
+    
+    def get_force(self):
+        accel_n = (self.accel[0]**2+self.accel[1]**2+self.accel[2]**2)**(0.5)
+        return accel_n * self.weight
+
 
 def create_celestial_objects(params_list):
     objects = []

@@ -55,6 +55,12 @@ class RenderTool:
         self.followLineEnable = True
         self.maxlength = 5
 
+        #Infos planètes
+        self.type_object_celeste_mapping = {1:"Étoile",2:"Planète",3:"Astéroide",4:"Trou Noir"}
+        op = 150
+        self.type_object_celeste_mapping_color = {1:(250,237,97,op),2:(0,255,0,op),3:(139,69,19,op),4:(1,1,1,op)}
+
+
 
 
 
@@ -748,10 +754,10 @@ class RenderTool:
         glEnd()
 
     def draw_selected_object_infos(self, object):
-        y = 0.38
+        y = 0.42
         x = 0.82
         largeur = 0.16
-        hauteur = 0.45
+        hauteur = 0.53
         padding = 4
         rec = shapes.Rectangle(self.window.width * x, self.window.height * y, self.window.width * largeur, self.window.height * hauteur, color=(41, 50, 69)) 
         rec2 = shapes.Rectangle(self.window.width * x - padding / 2, self.window.height * y - padding / 2, self.window.width * largeur + padding, self.window.height * hauteur + padding, color=(255, 255, 255)) 
@@ -766,8 +772,27 @@ class RenderTool:
         # Dessinez les rectangles directement sans aucune modification de la projection
         rec2.draw()
         rec.draw()
-        Label(self.window, f'{object.name}', centrer_x, centrer_y, self.font, (255, 255, 255, 200), 2).draw()
+        diff = 0.025
+        hauteur_vitesse = 0.12
+        type_object = self.type_object_celeste_mapping.get(object.type_object)
+        couleur_type_object = self.type_object_celeste_mapping_color.get(object.type_object)
+        Label(self.window, f'{object.name}', centrer_x, centrer_y, self.font, (255, 255, 255, 200), 2.5).draw()
+        Label(self.window, f'{type_object}', centrer_x, centrer_y-0.035, self.font, couleur_type_object, 1.5).draw()
+        Label(self.window, "Vitesse", centrer_x, centrer_y-0.10, self.font, (255,255,255,200), 1.5).draw()
+        Label(self.window, f"{object.get_velocity():,.0f} km/h".replace(",", ' '), centrer_x, centrer_y-0.125, self.font, (255,255,255,150), 1.2).draw()
 
+        Label(self.window, "Masse", centrer_x, centrer_y-0.160, self.font, (255,255,255,200), 1.5).draw()
+        Label(self.window, f"{object.weight:,.2e} kg".replace(",", ' '), centrer_x, centrer_y-0.160-diff, self.font, (255,255,255,150), 1.2).draw()
+
+        Label(self.window, "Rayon", centrer_x, centrer_y-0.155-diff-0.05, self.font, (255,255,255,200), 1.5).draw()
+        Label(self.window, f"{object.real_radius:,.0f} km".replace(",", ' '), centrer_x, centrer_y-0.155-2*diff-0.05, self.font, (255,255,255,150), 1.2).draw()
+
+        if object.type_object !=1:
+            Label(self.window, "Force gravitationnelle", centrer_x, centrer_y-0.155-2*diff-2*0.05, self.font, (255,255,255,200), 1.5).draw()
+            Label(self.window, f"{object.get_force():,.2e} N".replace(",", ' '), centrer_x, centrer_y-0.155-3*diff-2*0.05, self.font, (255,255,255,150), 1.2).draw()
+        else:
+            Label(self.window, "Température", centrer_x, centrer_y-0.155-2*diff-2*0.05, self.font, (255,255,255,200), 1.5).draw()
+            Label(self.window, f"5 500 k".replace(",", ' '), centrer_x, centrer_y-0.155-3*diff-2*0.05, self.font, (255,255,255,150), 1.2).draw()
 
 
         glViewport(int(self.window.width * x), int(self.window.height * y), int(self.window.width * largeur), int(self.window.height * hauteur))
@@ -792,7 +817,8 @@ class RenderTool:
         glBindTexture(GL_TEXTURE_2D, object.texture.id)
         quadric = gluNewQuadric()
         gluQuadricTexture(quadric, GL_TRUE)
-        gluSphere(quadric, object.rayon_simulation, 100, 30)
+        #object.rayon_simulation
+        gluSphere(quadric, 4, 100, 30)
         glPopMatrix()
 
         glDisable(GL_TEXTURE_2D)
