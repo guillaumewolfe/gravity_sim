@@ -97,6 +97,8 @@ class RenderTool:
         rec2.draw()
         rec.draw()
 
+        glViewport(int(x),int(y),int(self.window.width*0.20),int(self.window.height*0.30))
+
         glMatrixMode(GL_PROJECTION)
         glPushMatrix()
         glLoadIdentity()
@@ -108,12 +110,12 @@ class RenderTool:
         aspect_ratio = self.window.width / self.window.height
 
         # Fix vertical bounds
-        half_height = 0.075 * self.window.height
+        half_height = 0.024 * self.window.height
         bottom = -half_height
         top = half_height
 
         # Adjust horizontal bounds based on aspect ratio
-        half_width = half_height * aspect_ratio
+        half_width = half_height * aspect_ratio*0.60
         left = -half_width
         right = half_width
         near,far = -100,100
@@ -125,8 +127,8 @@ class RenderTool:
 
         glPushMatrix()
         glLoadIdentity()
-        glTranslatef(0,0,50)
-        glTranslatef(-107.5,-49,0)
+        #glTranslatef(0,0,0)
+        #glTranslatef(-107.5,-49,0)
 
         #glPushMatrix()
         self.rotation_matrix = self.extract_rotation_matrix(self.matrix)
@@ -267,6 +269,7 @@ class RenderTool:
         glPopMatrix()
         glMatrixMode(GL_MODELVIEW)
         glDisable(GL_DEPTH_TEST)
+        glViewport(0,0,self.window.width,self.window.height)
 
     def scale_minimap_position(self,position,length):
         # Convert Cartesian to Spherical
@@ -504,67 +507,95 @@ class RenderTool:
             glPopMatrix()
 
     def render_minimap_with_colors(self):
-        self.setup_2d_projection()
+        glViewport(int(self.window.width * 0.01), int(self.window.height * 0.02), int(self.window.width * 0.20), int(self.window.height * 0.30))
+        
         glMatrixMode(GL_PROJECTION)
         glPushMatrix()
         glLoadIdentity()
-        #gluPerspective(15, self.window.width/self.window.height, 1, 500)
-        #gluPerspective(35, self.window.width/self.window.height, 1, self.maxlength)
-
-
-
+        
         aspect_ratio = self.window.width / self.window.height
 
+
         # Fix vertical bounds
-        half_height = 0.075 * self.window.height
+        half_height = 0.024 * self.window.height  # valeur mise à jour
         bottom = -half_height
         top = half_height
 
-        # Adjust horizontal bounds based on aspect ratio
+
+        # Ajuster les limites horizontales en fonction du rapport d'aspect
         half_width = half_height * aspect_ratio
         left = -half_width
         right = half_width
-        near,far = -100,100
-        glOrtho(left,right,bottom,top,near,far)
+        near, far = -100, 100
+        glOrtho(left, right, bottom, top, near, far)
 
 
-        glPopMatrix()
         glMatrixMode(GL_MODELVIEW)
-
         glPushMatrix()
         glLoadIdentity()
-        glTranslatef(0,0,50)
-        glTranslatef(-107.5,-49,0)
-        self.move_camera()
+        glTranslatef(0, 0, 0)
+        
         self.rotation_matrix = self.extract_rotation_matrix(self.matrix)
         glMultMatrixd(self.rotation_matrix)
         
-
-        #HERE
-        # Clear the buffer with the blue background color
-        glClearColor(0, 0, 1, 1)  # RGB for blue
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-
         radius = 0.075
         length = 22
+        """quadric = gluNewQuadric()  # If you don't have this, add it at the beginning
+    
+        # X-axis (Red)
+        glColor3f(0, 0, 50/255.0)  # RGB for X axis color
+        glPushMatrix()
+        glTranslatef(0, 0, 0)
+        glRotatef(90, 0, 1, 0)  # Rotate 90 degrees around the Y axis to align the cylinder along the X axis
+        gluCylinder(quadric, radius, radius, length, 100, 100)
+        glPopMatrix()
+
+        # Z-axis (Green)
+        glColor3f(0, 0, 100/255.0)  # RGB for Z axis color
+        glPushMatrix()
+        glTranslatef(0, 0, 0)
+        glRotatef(180, 1, 0, 0)
+        gluCylinder(quadric, radius, radius, length, 100, 100)  # No need for rotation as it's already aligned to the Y axis
+        glPopMatrix()
+
+        # Y-axis (Blue)
+        glColor3f(0, 0, 150/255.0)  # RGB for Y axis color
+        glPushMatrix()
+        glTranslatef(0, 0, 0)
+        glRotatef(-90, 1, 0, 0)  # Rotate -90 degrees around the X axis to align the cylinder along the Z axis
+        gluCylinder(quadric, radius, radius, length, 100, 100)
+        glPopMatrix()"""
+
+
+
+        # Effacer le tampon
+        glClearColor(0, 0, 1, 1)  # RGB pour bleu
+        #glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         for obj in self.objects:
             r, g, b = obj.color_id
 
-            # Convert the color to 0-1 range
+
+            # Convertir la couleur à la plage 0-1
             r /= 255.0
             g /= 255.0
             b /= 255.0
 
-            # Set the color for the object
+
+            # Définir la couleur pour l'objet
             glColor3f(r, g, b)
             glPushMatrix()
-            position_minimap = self.scale_minimap_position(obj.position_simulation,length)
+            position_minimap = self.scale_minimap_position(obj.position_simulation, length)
             glTranslatef(position_minimap[0], position_minimap[1], position_minimap[2])
             quadric = gluNewQuadric()
-            gluSphere(quadric, radius*10, 30, 30)
+            gluSphere(quadric, radius * 10, 30, 30)
             glPopMatrix()
+        
         glPopMatrix()
-        self.setup_3d_projection()
+        glMatrixMode(GL_PROJECTION)
+        glPopMatrix()
+        glMatrixMode(GL_MODELVIEW)
+        glViewport(0, 0, self.window.width, self.window.height)
+
 
    
 
@@ -706,28 +737,72 @@ class RenderTool:
         glColor4f(1,1,1,1)
         glEnd()
 
-    def draw_selected_object_infos(self,object):
-        y=0.38
-        x=0.82
+    def draw_selected_object_infos(self, object):
+        y = 0.38
+        x = 0.82
         largeur = 0.16
         hauteur = 0.45
         padding = 4
-        rec  = shapes.Rectangle(self.window.width*x, self.window.height*y, self.window.width*largeur, self.window.height*hauteur, color=(41,50,69))
-        rec2  = shapes.Rectangle(self.window.width*x-padding/2, self.window.height*y-padding/2, self.window.width*largeur+padding, self.window.height*hauteur+padding, color=(255,255,255))
-        rec.opacity = 120
+        rec = shapes.Rectangle(self.window.width * x, self.window.height * y, self.window.width * largeur, self.window.height * hauteur, color=(41, 50, 69)) 
+        rec2 = shapes.Rectangle(self.window.width * x - padding / 2, self.window.height * y - padding / 2, self.window.width * largeur + padding, self.window.height * hauteur + padding, color=(255, 255, 255)) 
+        rec.opacity = 120 
         rec2.opacity = 20
-        rec.draw()
-        rec2.draw()
-        centrer_x = x + largeur/2
-        centrer_y = y+hauteur-0.035
-        info_x = x + 0.06
-        centrer_y2 = centrer_y-0.05
-        diff_y = 0.032
+        # Dessinez l'écriture
+        centrer_x = (self.window.width * (x + largeur / 2))/self.window.width
+        centrer_y = (self.window.height * (y + hauteur - 0.035))/self.window.height
+        # Configurez le viewport pour les rectangles
+    
 
-        Label(self.window, f'{object.name}', centrer_x, centrer_y,self.font,(255, 255, 255, 200),3).draw()
-        #Label(self.window, f'X : {object.real_position[0]:.2E} km', info_x, centrer_y2-diff_y,self.font,(255, 255, 255, 200),1.5).draw()
-        #Label(self.window, f'Y : {object.real_position[1]:.2E} km', info_x, centrer_y2-2*diff_y,self.font,(255, 255, 255, 200),1.5).draw()
-        #Label(self.window, f'Z : {object.real_position[2]:.2E} km', info_x, centrer_y2-3*diff_y,self.font,(255, 255, 255, 200),1.5).draw()
+        # Dessinez les rectangles directement sans aucune modification de la projection
+        rec2.draw()
+        rec.draw()
+        Label(self.window, f'{object.name}', centrer_x, centrer_y, self.font, (255, 255, 255, 200), 2).draw()
+
+
+
+        glViewport(int(self.window.width * x), int(self.window.height * y), int(self.window.width * largeur), int(self.window.height * hauteur))
+        # Configurez la projection pour le rendu 3D
+        glMatrixMode(GL_PROJECTION)
+        glPushMatrix()
+        glLoadIdentity()
+        fov = 35
+        aspect_ratio = (self.window.width * largeur) / (self.window.height * hauteur)
+        near = 0.1
+        far = 100
+        gluPerspective(fov, aspect_ratio, near, far)
+
+        # Dessinez la sphère
+        glEnable(GL_TEXTURE_2D)
+        glPushMatrix()
+        # Placez la caméra un peu plus loin pour voir correctement la sphère
+        glTranslatef(0, -22.5, -100)
+        #glRotatef(90,1,0,0)
+        self.rotation_matrix = self.extract_rotation_matrix(self.matrix)
+        glMultMatrixd(self.rotation_matrix)
+        glBindTexture(GL_TEXTURE_2D, object.texture.id)
+        quadric = gluNewQuadric()
+        gluQuadricTexture(quadric, GL_TRUE)
+        gluSphere(quadric, object.rayon_simulation, 100, 30)
+        glPopMatrix()
+
+        glDisable(GL_TEXTURE_2D)
+
+        # Restaurez la projection précédente
+        glMatrixMode(GL_PROJECTION)
+        glPopMatrix()
+        glMatrixMode(GL_MODELVIEW)
+
+        # Réinitialisez le viewport à ses dimensions originales
+        glViewport(0, 0, self.window.width, self.window.height)
+
+
+
+
+
+
+
+
+
 
     def draw_highlight(self, obj):
         scale_factor = 0.5 * math.sin(2 * math.pi * self.frame_counter / 90) + 0.5  # This oscillates between 0 and 1 over 60 frames
@@ -885,7 +960,7 @@ class RenderTool:
         self.draw_pyglet_objects()
 
 
-        self.frameBuffer.draw(0,0)
+        #self.frameBuffer.draw(0,0)
 
         self.frame_counter+=1
         if self.frame_counter>90:

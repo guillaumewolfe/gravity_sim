@@ -237,7 +237,7 @@ class SimulationState(BaseState):
             Button(self.window, 0.900, restart_pos, 0.1175, 0.045, "Restart", (255, 255, 255),self.font,opacity=20,button_sound="normal"),
             Button(self.window, 0.9, pause_pos, 0.1175, 0.045, "Pause", (255, 255, 255),self.font,opacity=20,button_sound="normal"),
             Button(self.window, 0.900, reset_pos, 0.1175, 0.045, "Reset Position", (255, 255, 255),self.font,opacity=20,button_sound="normal"),
-            Button(self.window, 0.9, axes_pos+0.15, 0.0675, 0.040, "Zoom", (255, 255, 255),self.font,opacity=20,enable=False,button_sound="normal"),
+            Button(self.window, 0.9, axes_pos+0.08, 0.0675, 0.040, "Zoom", (255, 255, 255),self.font,opacity=20,enable=False,button_sound="normal",isHighlight=True,highlight_color=(250,237,97,100)),
             Button(self.window, 0.275, menu_pos, 0.083, 0.030, "Axes", (255, 255, 255),self.font,opacity=20,isHighlight=True,isOn=2,button_sound="normal"),
             Button(self.window, 0.245, restart_pos-0.0125, 0.0200, 0.030, "X", (255, 255, 255),self.font,opacity=20,isHighlight=True,isOn=2,button_sound="normal"),
             Button(self.window, 0.275, restart_pos-0.0125, 0.0200, 0.030, "Y", (255, 255, 255),self.font,opacity=20,isHighlight=True,isOn=2,button_sound="normal"),
