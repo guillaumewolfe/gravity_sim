@@ -448,6 +448,7 @@ class RenderTool:
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
         self.render_with_colors()
+        self.render_minimap_with_colors()
 
         output_buffer = (GLubyte*3)()
 
@@ -502,7 +503,68 @@ class RenderTool:
             gluSphere(quadric, obj.rayon_simulation, 60, 18)
             glPopMatrix()
 
+    def render_minimap_with_colors(self):
+        self.setup_2d_projection()
+        glMatrixMode(GL_PROJECTION)
+        glPushMatrix()
+        glLoadIdentity()
+        #gluPerspective(15, self.window.width/self.window.height, 1, 500)
+        #gluPerspective(35, self.window.width/self.window.height, 1, self.maxlength)
 
+
+
+        aspect_ratio = self.window.width / self.window.height
+
+        # Fix vertical bounds
+        half_height = 0.075 * self.window.height
+        bottom = -half_height
+        top = half_height
+
+        # Adjust horizontal bounds based on aspect ratio
+        half_width = half_height * aspect_ratio
+        left = -half_width
+        right = half_width
+        near,far = -100,100
+        glOrtho(left,right,bottom,top,near,far)
+
+
+        glPopMatrix()
+        glMatrixMode(GL_MODELVIEW)
+
+        glPushMatrix()
+        glLoadIdentity()
+        glTranslatef(0,0,50)
+        glTranslatef(-107.5,-49,0)
+        self.move_camera()
+        self.rotation_matrix = self.extract_rotation_matrix(self.matrix)
+        glMultMatrixd(self.rotation_matrix)
+        
+
+        #HERE
+        # Clear the buffer with the blue background color
+        glClearColor(0, 0, 1, 1)  # RGB for blue
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+        radius = 0.075
+        length = 22
+        for obj in self.objects:
+            r, g, b = obj.color_id
+
+            # Convert the color to 0-1 range
+            r /= 255.0
+            g /= 255.0
+            b /= 255.0
+
+            # Set the color for the object
+            glColor3f(r, g, b)
+            glPushMatrix()
+            position_minimap = self.scale_minimap_position(obj.position_simulation,length)
+            glTranslatef(position_minimap[0], position_minimap[1], position_minimap[2])
+            quadric = gluNewQuadric()
+            gluSphere(quadric, radius*10, 30, 30)
+            glPopMatrix()
+        glPopMatrix()
+        self.setup_3d_projection()
 
    
 
@@ -823,7 +885,7 @@ class RenderTool:
         self.draw_pyglet_objects()
 
 
-        #self.frameBuffer.draw(0,0)
+        self.frameBuffer.draw(0,0)
 
         self.frame_counter+=1
         if self.frame_counter>90:
@@ -832,6 +894,3 @@ class RenderTool:
 
 
 
-
-
-            

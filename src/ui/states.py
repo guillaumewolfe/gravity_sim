@@ -222,15 +222,15 @@ class SimulationState(BaseState):
             Label(window, f"Simulation Time: {self.simulation_time:.2f} seconds", 0.5, 0.0325,self.font,self.couleur_label,2),
             Label(window, f"Time multiplier: x {self.time_multiplier:,}".replace(","," "), 0.5, 0.0825,self.font,self.couleur_label,2),  
             #Label(self.window, f"Selected object : ", 0.5, 0.1325,self.font,self.couleur_label,2),
-            Label(self.window, f"Rotations", 0.255, 0.0715,self.font,self.couleur_label,1.5)          
+            Label(self.window, f"Rotations", 0.255, 0.1315,self.font,self.couleur_label,1.5)          
                        ]
         
         diff = 0.055
-        restart_pos = 0.0425
-        reset_pos = restart_pos+diff
-        menu_pos = restart_pos+2*diff
-        pause_pos = restart_pos+3*diff
-        axes_pos = restart_pos+4*diff
+        menu_pos = 0.0425
+        reset_pos = menu_pos+2*diff
+        restart_pos = menu_pos+diff
+        pause_pos = menu_pos+3*diff
+        axes_pos = menu_pos+4*diff
 
         self.buttons = [
             Button(self.window, 0.900, menu_pos, 0.1175, 0.045, "Menu", (255, 255, 255),self.font,opacity=20,button_sound="menu"),
@@ -238,10 +238,10 @@ class SimulationState(BaseState):
             Button(self.window, 0.9, pause_pos, 0.1175, 0.045, "Pause", (255, 255, 255),self.font,opacity=20,button_sound="normal"),
             Button(self.window, 0.900, reset_pos, 0.1175, 0.045, "Reset Position", (255, 255, 255),self.font,opacity=20,button_sound="normal"),
             Button(self.window, 0.9, axes_pos+0.15, 0.0675, 0.040, "Zoom", (255, 255, 255),self.font,opacity=20,enable=False,button_sound="normal"),
-            Button(self.window, 0.900, axes_pos, 0.1175, 0.045, "Axes", (255, 255, 255),self.font,opacity=20,isHighlight=True,isOn=2,button_sound="normal"),
-            Button(self.window, 0.245, restart_pos-0.01, 0.0200, 0.030, "X", (255, 255, 255),self.font,opacity=20,isHighlight=True,isOn=2,button_sound="normal"),
-            Button(self.window, 0.275, restart_pos-0.01, 0.0200, 0.030, "Y", (255, 255, 255),self.font,opacity=20,isHighlight=True,isOn=2,button_sound="normal"),
-            Button(self.window, 0.305, restart_pos-0.01, 0.0200, 0.030, "Z", (255, 255, 255),self.font,opacity=20,isHighlight=True,isOn=2,button_sound="normal"),
+            Button(self.window, 0.275, menu_pos, 0.083, 0.030, "Axes", (255, 255, 255),self.font,opacity=20,isHighlight=True,isOn=2,button_sound="normal"),
+            Button(self.window, 0.245, restart_pos-0.0125, 0.0200, 0.030, "X", (255, 255, 255),self.font,opacity=20,isHighlight=True,isOn=2,button_sound="normal"),
+            Button(self.window, 0.275, restart_pos-0.0125, 0.0200, 0.030, "Y", (255, 255, 255),self.font,opacity=20,isHighlight=True,isOn=2,button_sound="normal"),
+            Button(self.window, 0.305, restart_pos-0.0125, 0.0200, 0.030, "Z", (255, 255, 255),self.font,opacity=20,isHighlight=True,isOn=2,button_sound="normal"),
             ]
         self.objects = create_celestial_objects(CELESTIAL_PARAMETERS)
         background_image = pyglet.image.load("assets/textures/background.jpg")
