@@ -55,3 +55,5 @@ class FrameBuffer:
         glEnd()
         glDisable(GL_TEXTURE_2D)
 
+    def update(self,width,height):
+        pass

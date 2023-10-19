@@ -10,7 +10,7 @@ from src.engine import physics
 from celestial_objects import CelestialObject,create_celestial_objects,CELESTIAL_PARAMETERS
 from transition import FadeTransition
 from raycast import dot,intersect,get_normalized_coordinates,intersect_ray_sphere
-
+from creation_planete import OutilCreation
 
 ressources = {}
 
@@ -79,7 +79,7 @@ class BaseState:
 
 
 
-
+        
 
 
 
@@ -108,8 +108,8 @@ class StartMenuState(BaseState):
         self.createMusic()
 
         self.labels = [
-            Label(window, 'Space Query', 0.5, 0.8,self.font,(255, 255, 255, 255),12),
-            Label(window, 'Main Menu', 0.5, 0.25,self.font,(255, 255, 255, 255),3),
+            Label(window.get_size(), 'Space Query', 0.5, 0.8,self.font,(255, 255, 255, 255),12),
+            Label(window.get_size(), 'Main Menu', 0.5, 0.25,self.font,(255, 255, 255, 255),3),
         ]
 
         self.buttons = [
@@ -218,32 +218,41 @@ class SimulationState(BaseState):
         self.selected_object = None
         self.couleur_label = (255,255,255,200)
         self.labels = [
-            Label(window, 'Simulation', 0.5, 0.9,self.font,(255, 255, 255, 0),4),
-            Label(window, f"Simulation Time: {self.simulation_time:.2f} seconds", 0.5, 0.0325,self.font,self.couleur_label,2),
-            Label(window, f"Time multiplier: x {self.time_multiplier:,}".replace(","," "), 0.5, 0.0825,self.font,self.couleur_label,2),  
+            Label(window.get_size(), 'Simulation', 0.5, 0.9,self.font,(255, 255, 255, 0),4),
+            Label(window.get_size(), f"Simulation Time: {self.simulation_time:.2f} seconds", 0.5, 0.0325,self.font,self.couleur_label,2),
+            Label(window.get_size(), f"Time multiplier: x {self.time_multiplier:,}".replace(","," "), 0.5, 0.0825,self.font,self.couleur_label,2),  
             #Label(self.window, f"Selected object : ", 0.5, 0.1325,self.font,self.couleur_label,2),         
                        ]
         
         diff = 0.055
         menu_pos = 0.0425
-        reset_pos = menu_pos+2*diff
         restart_pos = menu_pos+diff
-        pause_pos = menu_pos+3*diff
-        axes_pos = menu_pos+4*diff
+        pause_pos = menu_pos+2*diff
+        add_pos = menu_pos+3*diff
+        
 
         self.buttons = [
             Button(self.window, 0.900, menu_pos, 0.1175, 0.045, "Menu", (255, 255, 255),self.font,opacity=20,button_sound="menu"),
             Button(self.window, 0.900, restart_pos, 0.1175, 0.045, "Restart", (255, 255, 255),self.font,opacity=20,button_sound="normal"),
             Button(self.window, 0.9, pause_pos, 0.1175, 0.045, "Pause", (255, 255, 255),self.font,opacity=20,button_sound="normal"),
-            Button(self.window, 0.900, reset_pos, 0.1175, 0.045, "Reset Position", (255, 255, 255),self.font,opacity=20,button_sound="normal"),
-            Button(self.window, 0.9, axes_pos+0.08, 0.0675, 0.040, "Zoom", (255, 255, 255),self.font,opacity=20,enable=False,button_sound="normal",isHighlight=True,highlight_color=(250,237,97,100)),
-            Button(self.window, 0.9, axes_pos, 0.1175, 0.045, "Axes", (255, 255, 255),self.font,opacity=20,isHighlight=True,isOn=2,button_sound="normal")
+            Button(self.window, 0.26, restart_pos, 0.0800, 0.035, "Reset Camera", (255, 255, 255),self.font,opacity=20,button_sound="normal"),
+            Button(self.window, 0.9, 0.38, 0.0675, 0.040, "Zoom", (255, 255, 255),self.font,opacity=20,enable=False,button_sound="normal",isHighlight=True,highlight_color=(250,237,97,100)),
+            Button(self.window, 0.26, menu_pos, 0.0800, 0.035, "Axes", (255, 255, 255),self.font,opacity=20,isHighlight=True,isOn=2,button_sound="normal"),
+            Button(self.window, 0.9, add_pos, 0.1175, 0.045, "Add Object", (255, 255, 255),self.font,opacity=20,button_sound="normal")
             ]
         self.objects = create_celestial_objects(CELESTIAL_PARAMETERS)
         background_image = pyglet.image.load("assets/textures/background.jpg")
         self.background_texture = background_image.get_texture()
         self.renderTool = render.RenderTool(window,self.labels,self.buttons,self.objects,self.rotation_x,self.rotation_y,self.rotation_z,self.translation_x,self.translation_y,self.zoom,self.background_texture,font=self.font,SimulationState=self)
         self.renderTool.maxlength = self.max_length()
+
+
+        #Mode de création d'Object
+        self.planete_texture = self.load_textures()
+        self.isCreating = False
+        self.OutilCreation = OutilCreation(self.planete_texture,self,self.renderTool)
+
+
     def max_length(self):
         maxd = 0
         for obj in self.objects:
@@ -254,6 +263,14 @@ class SimulationState(BaseState):
     def enter(self):
         pass
 
+    def load_textures(self):
+        textures_loaded = {}
+        textures = {"Glace":"assets/textures/fictionnal_ice.jpg","Rocheuse":"assets/textures/fictionnal_terre.jpg","Soleil":"assets/textures/sun.jpg","Terre":"assets/textures/earth_real.jpg","Mars":"assets/textures/mars.jpg","Uranus":"assets/textures/uranus.jpg","Neptune":"assets/textures/Neptune.jpg"}
+        for planet_name, texture_path in textures.items():
+            textures_loaded[planet_name] = pyglet.image.load(texture_path).get_texture()
+        return textures_loaded
+
+
     def update(self,dt):
         if self.selected_object:
             text = self.selected_object.name
@@ -262,9 +279,9 @@ class SimulationState(BaseState):
         if not self.isPaused:
             self.simulation_time += dt * self.time_multiplier
             physics.update_physics(self.objects,dt* self.time_multiplier)
-        self.labels[1] = Label(self.window, f"Simulation Time: {self.simulation_time/86400:.2f} jours", 0.5, 0.0325, self.font, self.couleur_label, 2)
-        self.labels[2] = Label(self.window, f"Speed: x {self.time_multiplier:,}".replace(","," "), 0.5, 0.0825,self.font,self.couleur_label,2)
-        #self.labels[3] = Label(self.window, f"Selected object: {text}", 0.5, 0.1325,self.font,self.couleur_label,2)
+        self.labels[1] = Label(self.window.get_size(), f"Simulation Time: {self.simulation_time/86400:.2f} jours", 0.5, 0.0325, self.font, self.couleur_label, 2)
+        self.labels[2] = Label(self.window.get_size(), f"Speed: x {self.time_multiplier:,}".replace(","," "), 0.5, 0.0825,self.font,self.couleur_label,2)
+        #self.labels[3] = Label(self.window.get_size(), f"Selected object: {text}", 0.5, 0.1325,self.font,self.couleur_label,2)
     def reset_positions(self):
         self.rotation_x = 0 
         self.rotation_y = 0 
@@ -324,6 +341,19 @@ class SimulationState(BaseState):
         else :
             self.buttons[4].enabled = False
 
+    def button_activation(self,activation,button = None):
+        if button:
+            button.isActivated = activation
+            return
+        for btn in self.buttons:
+            btn.isActivated = activation
+
+
+    def creating_mode(self):
+        if not self.isPaused:
+            self.pause()
+        self.isCreating=True
+        self.button_activation(activation=False)
 
 
     def on_mouse_press(self, x, y, button, modifiers):
@@ -378,7 +408,7 @@ class SimulationState(BaseState):
                     self.pause()
 
                 
-                if btn.text == "Reset Position":
+                if btn.text == "Reset Camera":
                     btn.play_sound()
                     self.reset_positions()
                 
@@ -397,10 +427,23 @@ class SimulationState(BaseState):
                         self.renderTool.axesEnable = True
                         btn.isOn = 1
                     btn.play_sound()
+                if btn.text == "Add Object":
+                    if not self.isCreating:
+                        self.creating_mode()
+                        self.button_activation(True, btn)
+                        self.isCreating = True
+                        btn.isHighligh=True
+                        btn.isOn=2
+                    else:
+                        self.button_activation(True)
+                        self.isCreating = False
+                        btn.isHighligh = False
+                        btn.isOn=0
+                    btn.play_sound()
 
 
 
-        if not buttonClicked and not isAjusting:
+        if not buttonClicked and not isAjusting :#and not self.isCreating
             self.check_selection(x,y)
                         
 
@@ -423,7 +466,6 @@ class LoadingState(BaseState):
 
     
     def load_media(self):
-        self.medias["background_video"] = pyglet.media.load('assets/animations/back.mp4')
         self.medias["background_video"] = pyglet.media.load('assets/animations/intro4.mp4')
         self.medias["background_music"] = pyglet.media.load('assets/sounds/music_background.mp3',streaming=False)
         self.medias["bruit_selection_planete"] = pyglet.media.load('assets/sounds/selection_planete.wav', streaming=False)

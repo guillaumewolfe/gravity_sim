@@ -6,7 +6,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 class Button:
-    def __init__(self, window, x_rel, y_rel, width_rel, height_rel, text, color,font,opacity=255, enable = True, isHighlight = False, highlight_color = (255,0,0,20),isOn=0,button_sound = "normal"):
+    def __init__(self, window, x_rel, y_rel, width_rel, height_rel, text, color,font,opacity=255, enable = True,activated=True, isHighlight = False, highlight_color = (255,0,0,20),isOn=0,button_sound = "normal"):
         self.window = window
         self.x_rel = x_rel
         self.y_rel = y_rel
@@ -20,6 +20,7 @@ class Button:
         self.font=font
         self.hover = False
         self.opacity = opacity
+        self.isActivated = activated
         
         #Sounds
         self.sounds = {}
@@ -120,6 +121,7 @@ class Button:
         self.label.draw()
     def contains_point(self, x, y):
         if not self.enabled: return False
+        if not self.isActivated: return False
         return (self.rectangle.x < x < self.rectangle.x + self.rectangle.width and
                 self.rectangle.y < y < self.rectangle.y + self.rectangle.height)
 
@@ -134,8 +136,9 @@ class Button:
         self.padding_color = self.padding_color_perm
 
 class Label:
-    def __init__(self, window, text, x_percent, y_percent,font,color, font_size_percent=5,enable = True):
-        self.window = window
+    def __init__(self, size, text, x_percent, y_percent,font,color, font_size_percent=5,enable = True,x_anchor = "center",y_anchor="center"):
+        self.window_width = size[0]
+        self.window_height = size[1]
         self.text = text
         self.x_percent = x_percent
         self.y_percent = y_percent
@@ -143,6 +146,8 @@ class Label:
         self.color = color
         self.font=font
         self.enabled = enable or True
+        self.x_anchor = x_anchor
+        self.y_anchor = y_anchor
         
         self.label = pyglet.text.Label(
             self.text,
@@ -151,17 +156,17 @@ class Label:
             x=self.calculate_x(),
             y=self.calculate_y(),
             color=self.color,
-            anchor_x='center', anchor_y='center'
+            anchor_x=self.x_anchor, anchor_y=self.y_anchor
         )
     
     def calculate_x(self):
-        return self.window.width * self.x_percent
+        return self.window_width * self.x_percent
 
     def calculate_y(self):
-        return self.window.height * self.y_percent
+        return self.window_height * self.y_percent
 
     def calculate_font_size(self):
-        return self.window.height * (self.font_size_percent / 100.0)
+        return self.window_height * (self.font_size_percent / 100.0)
 
     def draw(self):
         if not self.enabled: return

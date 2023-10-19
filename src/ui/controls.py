@@ -10,7 +10,6 @@ isAjusting = False
 def handle_input(window, current_state):
     @window.event
     def on_mouse_press(x, y, button, modifiers):
-        #print(f"x : {x/window.width}     y : {y/window.height}")
         global isMousePressed
         isMousePressed = True
         current_state.on_mouse_press(x, y, button, modifiers)
@@ -44,6 +43,11 @@ def handle_input(window, current_state):
         glMatrixMode(GL_MODELVIEW)
     @window.event
     def on_mouse_motion(x, y, dx, dy):
+        if hasattr(current_state, 'isCreating'):
+            if current_state.isCreating:
+                current_state.OutilCreation.on_mouse_motion(x,y)
+            
+
         for btn in current_state.buttons:
             if btn.contains_point(x, y):
                 btn.hover = True
@@ -65,7 +69,6 @@ def handle_input(window, current_state):
         global isShiftPressed
         global isMousePressed
         if isShiftPressed:
-            print()
             current_state.modify_time_modifier(scroll_y) 
         else:
             current_state.zoomer(scroll_y) 
@@ -79,6 +82,15 @@ def handle_input(window, current_state):
             current_state.modify_time_modifier(-1)
         if symbol == pyglet.window.key.SPACE:
             current_state.pause()
+
+
+        if symbol == pyglet.window.key.Q:
+            current_state.OutilCreation.YO += 0.01
+        if symbol == pyglet.window.key.E:
+            current_state.OutilCreation.YO -= 0.01
+
+
+
 
         if symbol == pyglet.window.key.LSHIFT or symbol == pyglet.window.key.RSHIFT:
             global isShiftPressed
