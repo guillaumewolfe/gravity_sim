@@ -461,6 +461,8 @@ class RenderTool:
 
         self.render_with_colors()
         self.render_minimap_with_colors()
+        if self.SimulationState.isCreating:
+            self.render_creation_with_colors()
 
         output_buffer = (GLubyte*3)()
 
@@ -472,7 +474,7 @@ class RenderTool:
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
         color_id = (output_buffer[0],output_buffer[1],output_buffer[2])
-
+        print(color_id)
         if color_id ==(0, 0, 50):#X
             self.SimulationState.focus_on_axes("x")
         elif color_id ==(0, 0, 150):#Y
@@ -612,9 +614,65 @@ class RenderTool:
         glMatrixMode(GL_MODELVIEW)
         glViewport(0, 0, self.window.width, self.window.height)
 
+    def render_creation_with_colors(self):
+        self.setup_2d_projection()
+        self.padding=5
+        self.width = self.window.width
+        self.height = self.window.height
+        self.x = int(0.01 * self.width)
+        self.y = int(0.38 * self.height)
 
-   
+        self.largeur = int(0.20*self.width)
+        self.hauteur = int(0.5*self.height)
+        glViewport(self.x + self.padding, self.y + self.padding, self.largeur - 2 * self.padding, self.hauteur - 2 * self.padding)
+           
+        glMatrixMode(GL_PROJECTION)
+        glPushMatrix()
+        glLoadIdentity()
+        fov = 35
+        aspect_ratio = (self.largeur - 2 * self.padding) / (self.hauteur - 2 * self.padding)
+        near = 0.1
+        far = 100
+        gluPerspective(fov, aspect_ratio, near, far)
 
+
+        num_planets_per_row = 3
+        planet_radius = 3
+        gap = 3 * planet_radius
+        titre_marge = 2 * planet_radius  # Adjust as needed
+
+        half_width_of_line = 2 * gap + num_planets_per_row * 2 * planet_radius + (num_planets_per_row - 1) * gap
+        half_height_of_line = 2 * planet_radius
+
+        start_x = -0.9*half_width_of_line / 2 + gap
+        start_y = half_height_of_line / 2 + titre_marge
+
+        row_count = 0
+        col_count = 0
+
+        for planet_name, texture in self.SimulationState.planete_texture.items():
+            glPushMatrix()
+
+            # Translation to position the planet
+            glTranslatef(start_x + col_count * (gap + 2 * planet_radius), start_y - row_count * (gap + 2 * planet_radius), -100)
+            glColor3f(1,1,1)
+            quadric = gluNewQuadric()
+            gluSphere(quadric, planet_radius, 100, 30)
+
+            glPopMatrix()
+
+            # Update counters to position the next planet
+            col_count += 1
+            if col_count == num_planets_per_row:
+                col_count = 0
+                row_count += 1
+
+        # Restore the previous projection
+        glMatrixMode(GL_PROJECTION)
+        glPopMatrix()
+        glMatrixMode(GL_MODELVIEW)
+        glViewport(0, 0, self.width, self.height)
+        self.setup_3d_projection()
     
     def is_color_close(self, color1, color2, threshold=10):
         """Check if two colors are close based on a threshold."""
