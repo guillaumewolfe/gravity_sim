@@ -60,7 +60,6 @@ class BaseState:
 
 
     def switch_state(self,NewState):
-        #self.transition_out()
         pyglet.clock.schedule_once(lambda dt:self.exit(),1)
         self.next_state=NewState(self.window)
 
@@ -141,6 +140,7 @@ class StartMenuState(BaseState):
             StartMenuState.musicPlayer.queue(self.background_music)
             StartMenuState.musicPlayer.loop = True
             StartMenuState.musicPlayer.play()
+            StartMenuState.musicPlayer.pause()
 
 
     def setup_2d_projection(self):
@@ -236,9 +236,10 @@ class SimulationState(BaseState):
             Button(self.window, 0.900, restart_pos, 0.1175, 0.045, "Restart", (255, 255, 255),self.font,opacity=20,button_sound="normal"),
             Button(self.window, 0.9, pause_pos, 0.1175, 0.045, "Pause", (255, 255, 255),self.font,opacity=20,button_sound="normal"),
             Button(self.window, 0.26, restart_pos, 0.0800, 0.035, "Reset Camera", (255, 255, 255),self.font,opacity=20,button_sound="normal"),
-            Button(self.window, 0.9, 0.38, 0.0675, 0.040, "Zoom", (255, 255, 255),self.font,opacity=20,enable=False,button_sound="normal",isHighlight=True,highlight_color=(250,237,97,100)),
+            Button(self.window, 0.900, 0.451, 0.0375, 0.030, "Zoom", (255, 255, 255),self.font,opacity=20,enable=False,button_sound="normal",isHighlight=True,highlight_color=(0,255,0,80)),
             Button(self.window, 0.26, menu_pos, 0.0800, 0.035, "Axes", (255, 255, 255),self.font,opacity=20,isHighlight=True,isOn=2,button_sound="normal"),
-            Button(self.window, 0.9, add_pos, 0.1175, 0.045, "Add Object", (255, 255, 255),self.font,opacity=20,button_sound="normal")
+            Button(self.window, 0.9, add_pos, 0.1175, 0.045, "Add Object", (255, 255, 255),self.font,opacity=20,button_sound="normal"),
+            Button(self.window, 0.955, 0.925, 0.0355, 0.030, "Remove", (255, 255, 255),self.font,opacity=20,enable=False,button_sound="normal",isHighlight=True,highlight_color=(255,0,0,120))
             ]
         self.objects = create_celestial_objects(CELESTIAL_PARAMETERS)
         background_image = pyglet.image.load("assets/textures/background.jpg")
@@ -297,6 +298,8 @@ class SimulationState(BaseState):
         self.time_multiplier = 1
         self.simulation_time=0
         self.selected_object = None
+        self.buttons[4].enabled = False
+        self.buttons[7].enabled = False
 
     def rotation(self, dx, dy,dz):
         # Mettez à jour les angles de rotation en fonction du mouvement de la souris
@@ -305,6 +308,7 @@ class SimulationState(BaseState):
         self.rotation_y += dx * sensitivity   
         self.rotation_z += dz * sensitivity   
     def focus_on_axes(self,axe):
+        self.reset_positions()
         diffx,diffy,diffz = 0,0,0
         if axe == "y":
             diffz = 90
@@ -338,8 +342,10 @@ class SimulationState(BaseState):
                 self.renderTool.followObject = self.renderTool.selectedObject
             self.medias["bruit_selection_planete"].play()
             self.buttons[4].enabled = True
+            self.buttons[7].enabled = True
         else :
             self.buttons[4].enabled = False
+            self.buttons[7].enabled = False
 
     def button_activation(self,activation,button = None):
         if button:
@@ -348,10 +354,19 @@ class SimulationState(BaseState):
         for btn in self.buttons:
             btn.isActivated = activation
 
+    def remove_object(self):
+        if self.selected_object:
+            self.objects.remove(self.selected_object)
+            self.selected_object = None
+            self.renderTool.followObject = None
+            self.buttons[4].enabled = False
+            self.buttons[7].enabled = False
+
+
+
+
 
     def creating_mode(self):
-        if not self.isPaused:
-            self.pause()
         self.isCreating=True
         self.button_activation(activation=False)
 
@@ -417,6 +432,10 @@ class SimulationState(BaseState):
                     self.reset_positions()
                     self.renderTool.followObjectEnabled = True
                     self.renderTool.followObject = self.renderTool.selectedObject
+                
+                if btn.text == "Remove":
+                    btn.play_sound()
+                    self.remove_object()
 
                 if btn.text == "Axes":
                     if self.renderTool.axesEnable:
@@ -429,6 +448,8 @@ class SimulationState(BaseState):
                     btn.play_sound()
                 if btn.text == "Add Object":
                     if not self.isCreating:
+                        if not self.isPaused:
+                            self.pause()
                         self.creating_mode()
                         self.button_activation(True, btn)
                         self.isCreating = True
@@ -439,6 +460,7 @@ class SimulationState(BaseState):
                         self.isCreating = False
                         btn.isHighligh = False
                         btn.isOn=0
+                        self.pause()
                     btn.play_sound()
 
 

@@ -12,17 +12,21 @@ from src.ui.pyglet_objects import Label,Button
 
 class OutilCreation:
     def __init__(self,textures,SimulationState,RenderTool):
-
+        #Outil et autres init
         self.textures = textures
         self.RenderTool = RenderTool
         self.SimulationState = SimulationState
-
-        self.object_created = None
+        self.object_created = Object_creation(None,None,None)
+        self.angle_rotation = 0
+        self.Titre_label = ""
 
         #États
         self.etats = ["texture","masse","rayon","position","choix_vitesse","append_to_list"]
         self.liste_etats = {"texture" : self.choix_texture, "masse" : self.choix_masse, "rayon": self.choix_rayon, "position":self.choix_position, "append_to_list":self.append_to_list,"vitesse":self.choix_vitesse}
         self.etat_present = 0
+
+        #crée la liste d'objets
+        self.objects_creations = self.createObjectCreation()
 
         #Propriete:
         self.texture = None
@@ -33,13 +37,30 @@ class OutilCreation:
         self.rec_opacity = 100
         self.rec2_opacity = 200
 
-        self.angle_rotation = 0
+        #highlight Object Selection tecture
+        self.selected_object_creation = None
+        self.highlight_color = (0,1,1,0.3)
 
-        
 
-        #ViewPort
+    def createObjectCreation(self):
+        i = 1
+        color = (25,25,25)
+        liste = []
+        for name, texture in self.textures.items():
+            
+            liste.append(Object_creation(name,texture,[i*color[n] for n,u in enumerate(color)]))
+            i+=1
+        return liste
+    def reset(self):
+
+        self.highlight_color = (0,1,1,0.3)
+        self.selected_object_creation = None
+        self.etat_present = 0
+        self.object_created = None
+
 
     def choix_texture(self):
+        self.Titre_label = "Select Celestial Object"
         choix = False
         self.dessiner_planets()
 
@@ -48,7 +69,7 @@ class OutilCreation:
         if choix:
             self.next_etat()
     def choix_masse(self):
-        print("masse")
+        self.Titre_label = "Mass Specification"
 
     def choix_rayon(self):
         pass
@@ -74,16 +95,14 @@ class OutilCreation:
         rec2.opacity = self.rec2_opacity
         rec.draw()
         rec2.draw()
-        Label(self.RenderTool.window.get_size(), f'Type de planète', ((self.x+self.largeur)/2)/self.RenderTool.window.width, (self.y+self.hauteur)/self.RenderTool.window.height-0.04, self.SimulationState.font, (255, 255, 255, 200), 1.5).draw()
+        Label(self.RenderTool.window.get_size(), self.Titre_label, ((self.x+self.largeur)/2)/self.RenderTool.window.width, (self.y+self.hauteur)/self.RenderTool.window.height-0.06, self.SimulationState.font, (255, 255, 255, 200), 1.8).draw()
 
 
     def draw(self):
-
         self.width = self.SimulationState.window.width
         self.height = self.SimulationState.window.height
         self.x = int(0.01 * self.width)
         self.y = int(0.38 * self.height)
-
         self.largeur = int(0.20*self.width)
         self.hauteur = int(0.5*self.height)
 
@@ -108,16 +127,27 @@ class OutilCreation:
 
     
     def on_mouse_motion(self,x,y):
-       pass
+        if not self.contains_point(x,y):
+            return
+        if self.etat_present == 0:
+            self.selected_object_creation = self.RenderTool.selection_mode(x,y,mode=1,liste_objects = self.objects_creations)
 
 
 
-    def mouse_drag(self,x,y):
+    def on_mouse_drag(self,x,y):
         pass
 
+    def on_mouse_press(self,x,y):
+        self.highlight_color=(1,1,1,0.2)
 
-    def mouse_click(self,x,y):
-        pass
+    def on_mouse_release(self,x,y):
+        if self.etat_present == 0:
+            self.selected_object_creation = self.RenderTool.selection_mode(x,y,mode=1,liste_objects = self.objects_creations)
+            if self.selected_object_creation:
+                self.object_created.texture = self.selected_object_creation.texture
+                self.highlight_color = (0,1,1,0.3)
+                self.next_etat()
+
 
 
     def dessiner_planets(self):
@@ -151,20 +181,38 @@ class OutilCreation:
         col_count = 0
         labels = []
 
-        for planet_name, texture in self.textures.items():
+        for obj in self.objects_creations:
             glPushMatrix()
 
             # Translation to position the planet
             glTranslatef(start_x + col_count * (gap + 2 * planet_radius), start_y - row_count * (gap + 2 * planet_radius), -100)
             glRotatef(self.angle_rotation, 0, 1, 1)
 
-            glBindTexture(GL_TEXTURE_2D, texture.id)
+            glBindTexture(GL_TEXTURE_2D, obj.texture.id)
 
             quadric = gluNewQuadric()
             gluQuadricTexture(quadric, GL_TRUE)
             gluSphere(quadric, planet_radius, 100, 30)
 
+            if self.selected_object_creation and obj == self.selected_object_creation:
+                glDisable(GL_TEXTURE_2D)
+                glEnable(GL_BLEND)
+                glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
+                glDisable(GL_DEPTH_TEST)
+
+                quadric = gluNewQuadric()
+                glColor4f(*self.highlight_color)
+                gluSphere(quadric, planet_radius*1.3, 100, 30)
+
+                glDisable(GL_BLEND)
+                glEnable(GL_TEXTURE_2D)
+                glColor4f(1,1,1,1)
             glPopMatrix()
+
+
+
+
+
 
             # Update counters to position the next planet
             col_count += 1
@@ -204,3 +252,11 @@ class OutilCreation:
 
 """        if self.SimulationState.isCreating:
             self.SimulationState.OutilCreation.draw()"""
+
+
+
+class Object_creation:
+    def __init__(self,name,texture,color_id):
+        self.name = name
+        self.texture = texture
+        self.color_id = color_id

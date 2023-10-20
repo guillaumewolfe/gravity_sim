@@ -16,9 +16,6 @@ def handle_input(window, current_state):
 
 
 
-
-
-
     @window.event
     def on_mouse_release(x, y, button, modifiers):
         global isMousePressed
@@ -26,7 +23,10 @@ def handle_input(window, current_state):
         global isAjusting
         current_state.on_mouse_released(x, y, button, modifiers,isAjusting)
         isAjusting = False
-        # ... (logique de gestion des entrées) ...
+        if hasattr(current_state, 'isCreating'):
+            if current_state.isCreating:
+                current_state.OutilCreation.on_mouse_release(x,y)
+            # ... (logique de gestion des entrées) ...
 
     @window.event
     def on_close():
@@ -41,18 +41,21 @@ def handle_input(window, current_state):
         glLoadIdentity()
         gluOrtho2D(0, width, 0, height)
         glMatrixMode(GL_MODELVIEW)
+
+
     @window.event
     def on_mouse_motion(x, y, dx, dy):
         if hasattr(current_state, 'isCreating'):
             if current_state.isCreating:
                 current_state.OutilCreation.on_mouse_motion(x,y)
-            
-
         for btn in current_state.buttons:
             if btn.contains_point(x, y):
                 btn.hover = True
             else:
                 btn.hover = False
+
+
+
     @window.event
     def on_mouse_drag(x, y, dx, dy, button, modifiers):
 

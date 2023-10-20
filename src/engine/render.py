@@ -341,7 +341,7 @@ class RenderTool:
         glEnable(GL_DEPTH_TEST)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        gluPerspective(35, self.window.width/self.window.height, 1, self.maxlength)
+        gluPerspective(35, self.window.width/self.window.height, 1, self.maxlength*2)
         glMatrixMode(GL_MODELVIEW)
 
     
@@ -453,16 +453,17 @@ class RenderTool:
             btn.draw()
     
 
-    def selection_mode(self,x,y):
+    def selection_mode(self,x,y,mode=0,liste_objects=[]):
 
         self.frameBuffer.bind()
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
+
         self.render_with_colors()
         self.render_minimap_with_colors()
-        if self.SimulationState.isCreating:
-            self.render_creation_with_colors()
+        if self.SimulationState.isCreating and mode == 1:
+            self.render_creation_with_colors(liste_objects)
 
         output_buffer = (GLubyte*3)()
 
@@ -474,21 +475,22 @@ class RenderTool:
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
         color_id = (output_buffer[0],output_buffer[1],output_buffer[2])
-        print(color_id)
-        if color_id ==(0, 0, 50):#X
-            self.SimulationState.focus_on_axes("x")
-        elif color_id ==(0, 0, 150):#Y
-            self.SimulationState.focus_on_axes("y")
-        elif color_id ==(0, 0, 100):#Z
-            self.SimulationState.focus_on_axes("z")
-        
-        
-        
-        if color_id[2]>200 : return None
 
-        self.selectedObject = self.get_object_by_color_id(color_id)
 
-        return self.selectedObject
+        if mode == 0:
+            if color_id ==(0, 0, 50):#X
+                self.SimulationState.focus_on_axes("x")
+            elif color_id ==(0, 0, 150):#Y
+                self.SimulationState.focus_on_axes("y")
+            elif color_id ==(0, 0, 100):#Z
+                self.SimulationState.focus_on_axes("z")
+            if color_id[2]>200 : return None
+
+            self.selectedObject = self.get_object_by_color_id(color_id, self.objects)
+
+            return self.selectedObject
+        elif mode == 1:
+            return  self.get_object_by_color_id(color_id, liste_objects)
 
         
     def render_with_colors(self):
@@ -614,7 +616,7 @@ class RenderTool:
         glMatrixMode(GL_MODELVIEW)
         glViewport(0, 0, self.window.width, self.window.height)
 
-    def render_creation_with_colors(self):
+    def render_creation_with_colors(self,objects):
         self.setup_2d_projection()
         self.padding=5
         self.width = self.window.width
@@ -650,12 +652,16 @@ class RenderTool:
         row_count = 0
         col_count = 0
 
-        for planet_name, texture in self.SimulationState.planete_texture.items():
+        for obj in objects:
+            r, g, b = obj.color_id
+            r /= 255.0
+            g /= 255.0
+            b /= 255.0
+            glColor3f(r, g, b)
             glPushMatrix()
 
             # Translation to position the planet
             glTranslatef(start_x + col_count * (gap + 2 * planet_radius), start_y - row_count * (gap + 2 * planet_radius), -100)
-            glColor3f(1,1,1)
             quadric = gluNewQuadric()
             gluSphere(quadric, planet_radius, 100, 30)
 
@@ -666,7 +672,7 @@ class RenderTool:
             if col_count == num_planets_per_row:
                 col_count = 0
                 row_count += 1
-
+    
         # Restore the previous projection
         glMatrixMode(GL_PROJECTION)
         glPopMatrix()
@@ -678,8 +684,8 @@ class RenderTool:
         """Check if two colors are close based on a threshold."""
         return all(abs(c1 - c2) <= threshold for c1, c2 in zip(color1, color2))
 
-    def get_object_by_color_id(self, color_id, threshold=10):
-        for obj in self.objects:
+    def get_object_by_color_id(self, color_id,object_list ,threshold=10):
+        for obj in object_list:
             if self.is_color_close(obj.color_id, color_id, threshold):
                 return obj
         return None
@@ -868,11 +874,12 @@ class RenderTool:
         glEnable(GL_TEXTURE_2D)
         glPushMatrix()
         # Placez la caméra un peu plus loin pour voir correctement la sphère
-        glTranslatef(0, -22.5, -100)
+        glTranslatef(0, -19.5, -100)
         #glRotatef(90,1,0,0)
         self.rotation_matrix = self.extract_rotation_matrix(self.matrix)
         glMultMatrixd(self.rotation_matrix)
         glBindTexture(GL_TEXTURE_2D, object.texture.id)
+        glRotatef(self.selectedObject.rotation_siderale_angle,*self.selectedObject.rotation_direction)
         quadric = gluNewQuadric()
         gluQuadricTexture(quadric, GL_TRUE)
         #object.rayon_simulation
