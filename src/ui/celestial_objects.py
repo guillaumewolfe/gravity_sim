@@ -5,11 +5,14 @@ from objectCelesteData import CELESTIAL_PARAMETERS
 
 
 class CelestialObject:
-    def __init__(self, name, relation, real_position, real_radius, texture_path,type_object = 2,real_distance = None,position_simulation=None,rayon_simulation=None ,velocity=None, force=None, accel=None, weight=None,inclinaison=None,rotation_siderale_angle=None,rotation_siderale_vitesse=None,rotation_direction=None,color_id = (0,0,0)):
+    def __init__(self, name, texture, real_radius = 6371e3,texture_isLoaded = False ,real_position = [0,0,0], relation = None, type_object = 2, real_distance = 0,position_simulation=None,rayon_simulation=None ,velocity=None, force=None, accel=None, weight=None,inclinaison=None,rotation_siderale_angle=None,rotation_siderale_vitesse=None,rotation_direction=None,color_id = (0,0,0)):
         self.name = name
         self.real_position = real_position  # position en unités réelles
         self.relation = relation
-        self.texture = pyglet.image.load(texture_path).get_texture()
+        if not texture_isLoaded:
+            self.texture = pyglet.image.load(texture).get_texture()
+        else:
+            self.texture = texture
         self.velocity = velocity or [0, 0, 0]
         self.force = force or [0, 0, 0]
         self.accel = accel or [0, 0, 0]
@@ -71,7 +74,7 @@ def create_celestial_objects(params_list):
             relation=params["relation"],
             real_position=real_position,
             real_radius=params["real_radius"],
-            texture_path=params["texture_path"],
+            texture=params["texture_path"],
             velocity=params["velocity"],
             weight=params["weight"],
             accel=params["accel"],
@@ -106,6 +109,8 @@ class SimulationScale:
     SIZE_MIN = 1  # Rayon minimum dans la simulation
     SIZE_MAX = 4   # Rayon maximum (pour le Soleil)
 
+    # ... Vos autres méthodes ici ...
+
     @classmethod
     def to_distance(cls, real_distance):
         return real_distance / cls.DISTANCE_SCALE
@@ -114,12 +119,28 @@ class SimulationScale:
     def to_size(cls, real_radius):
         if real_radius == 696_340e3:
             return 6
-        
+       
         # Mise à l'échelle linéaire
-        max_radius_real = 69911e3  # Rayon de jupyter
+        max_radius_real = 69911e3  # Rayon de Jupiter
         min_radius_real = 1737.5e3  # Supposons qu'il s'agisse d'un rayon minimum réaliste pour un petit objet
 
         # Interpolation linéaire entre SIZE_MIN et SIZE_MAX
         normalized_size = cls.SIZE_MIN + (real_radius - min_radius_real) / (max_radius_real - min_radius_real) * (cls.SIZE_MAX - cls.SIZE_MIN)
-        
+       
         return normalized_size
+
+    @classmethod
+    def from_distance(cls, scaled_distance):
+        return scaled_distance * cls.DISTANCE_SCALE
+
+    @classmethod
+    def from_size(cls, normalized_size):
+        max_radius_real = 69911e3
+        min_radius_real = 1737.5e3
+
+        real_radius = min_radius_real + (normalized_size - cls.SIZE_MIN) / (cls.SIZE_MAX - cls.SIZE_MIN) * (max_radius_real - min_radius_real)
+
+        return real_radius
+
+
+

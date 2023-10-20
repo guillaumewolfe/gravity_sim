@@ -906,7 +906,6 @@ class RenderTool:
 
     def draw_highlight(self, obj):
         scale_factor = 0.5 * math.sin(2 * math.pi * self.frame_counter / 90) + 0.5  # This oscillates between 0 and 1 over 60 frames
-        scale = obj.rayon_simulation *1.01 + 1.5 * scale_factor 
         position = obj.position_simulation
         """Draw a semi-transparent sphere around the selected object."""
         # Color (47,233,240) with 0.5 transparency
@@ -923,12 +922,15 @@ class RenderTool:
         glTranslatef(position[0], position[1], position[2])
         
         # Scale if necessary. You can adjust or remove this line depending on your needs.
-        glScalef(scale, scale, scale)
+        #glScalef(scale, scale, scale)
         
         # Drawing the sphere (assuming you have the glu library with pyglet)
         quad = gluNewQuadric()
-        gluSphere(quad, 1.0, 60, 60)
+        for i in range(1,50):
+            glColor4f(1.0,1.0,1,(0.04+scale_factor/20)/(i))
+            gluSphere(quad,obj.rayon_simulation*(1+0.02*i),100,100)
         gluDeleteQuadric(quad)
+
 
         glPopMatrix()
         glColor4f(1, 1, 1, 1)
@@ -961,6 +963,7 @@ class RenderTool:
     def draw_celestial_objects(self):
         glEnable(GL_TEXTURE_2D)
         # Set up lighting parameters
+        
         glEnable(GL_LIGHTING)
         glEnable(GL_LIGHT0)
 
@@ -976,17 +979,14 @@ class RenderTool:
         specular_light_intensity = 100
         specular_light = (GLfloat * 4)(specular_light_intensity/100, specular_light_intensity/100, specular_light_intensity/100, 1.0) # Specular reflection 
         glLightfv(GL_LIGHT0, GL_SPECULAR, specular_light)
-
-
+        
 
         for i,obj in enumerate(self.objects):
             #Bind texture
             glBindTexture(GL_TEXTURE_2D, obj.texture.id)
             glPushMatrix()
-
             #On positionne l'object
             glTranslatef(obj.position_simulation[0], obj.position_simulation[1], obj.position_simulation[2])
-
             if hasattr(obj, "inclinaison"):
                 glRotatef(obj.inclinaison,1,0,0)
     
@@ -1056,6 +1056,7 @@ class RenderTool:
         self.draw_minimap()
         if self.SimulationState.isCreating:
             self.SimulationState.OutilCreation.draw()
+
 
         #Dessiner bouttons + Labels
         self.draw_pyglet_objects()

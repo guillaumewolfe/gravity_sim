@@ -6,7 +6,7 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 #from src.engine import render
-from celestial_objects import CelestialObject,create_celestial_objects,CELESTIAL_PARAMETERS
+from celestial_objects import CelestialObject,create_celestial_objects,CELESTIAL_PARAMETERS,SimulationScale
 from src.ui.pyglet_objects import Label,Button
 
 
@@ -43,6 +43,10 @@ class OutilCreation:
         self.label_selected_object = ""
         self.type_object_celeste_mapping_color = {1:(250,237,97,200),2:(0,255,0,120),3:(139,69,19,150),4:(50,50,50,255)}
         self. label_selected_object_color = (255,255,255,255)
+
+        #Souris
+        self.souris_x = 0
+        self.souris_y = 0
 
 
 
@@ -84,13 +88,15 @@ class OutilCreation:
         pass
 
     def choix_position(self):
-        pass
+        self.Titre_label = "Choose position"
+        self.SimulationState.objects[-1].position_simulation[0] = (self.souris_x-0.5) * self.RenderTool.maxlength / 0.5
 
     def choix_vitesse(self):
         pass
 
     def append_to_list(self):
-        pass
+        self.SimulationState.objects.append(CelestialObject(self.object_created.name,self.object_created.texture, texture_isLoaded=True,rayon_simulation=5))
+
 
 
 
@@ -123,28 +129,45 @@ class OutilCreation:
 
 
     def next_etat(self):
+        if self.etat_present == 0:
+            self.label_selected_object =""
+            self.etat_present = 3
+            return
+
         self.etat_present += 1
     
 
 
 
 
-    def contains_point(self, x, y):
+    def contains_point(self, x, y): #Souris est sur le HUD
         return (self.x < x < self.x + self.largeur and
                 self.y < y < self.y + self.hauteur)
 
     
     def on_mouse_motion(self,x,y):
-        if not self.contains_point(x,y):
-            return
-        if self.etat_present == 0:
-            self.selected_object_creation = self.RenderTool.selection_mode(x,y,mode=1,liste_objects = self.objects_creations)
-            if self.selected_object_creation:
-                self.label_selected_object_color = self.type_object_celeste_mapping_color.get(self.selected_object_creation.type_object)
-                self.label_selected_object = self.selected_object_creation.name
-            else:
-                self.label_selected_object = ""
+        if self.contains_point(x,y):
+            if self.etat_present == 0:
+                self.selected_object_creation = self.RenderTool.selection_mode(x,y,mode=1,liste_objects = self.objects_creations)
+                if self.selected_object_creation:
+                    self.label_selected_object_color = self.type_object_celeste_mapping_color.get(self.selected_object_creation.type_object)
+                    self.label_selected_object = self.selected_object_creation.name
+                else:
+                    self.label_selected_object = ""
+        if self.etat_present == 3:
+            self.souris_x = x/self.width
+            self.souris_y = y/self.height
 
+
+    def calculate_mouse_distance(self):
+        # Ajustez les coordonnées de la souris pour qu'elles soient centrées autour de (0.5, 0.5)
+        centered_x = self.souris_x - 0.5
+        centered_y = self.souris_y - 0.5
+        
+        # Calculez la distance par rapport au centre
+        distance = (centered_x**2 + centered_y**2)**0.5
+        
+        return distance
 
 
     def on_mouse_drag(self,x,y):
@@ -158,8 +181,11 @@ class OutilCreation:
             self.selected_object_creation = self.RenderTool.selection_mode(x,y,mode=1,liste_objects = self.objects_creations)
             if self.selected_object_creation:
                 self.object_created.texture = self.selected_object_creation.texture
+                self.object_created.name = self.selected_object_creation.name
                 self.highlight_color = (0,1,1,0.3)
+                self.append_to_list()
                 self.next_etat()
+
 
 
 
@@ -196,7 +222,7 @@ class OutilCreation:
 
         for obj in self.objects_creations:
             glPushMatrix()
-
+            #draw planets
             # Translation to position the planet
             glTranslatef(start_x + col_count * (gap + 2 * planet_radius), start_y - row_count * (gap + 2 * planet_radius), -100)
             glRotatef(self.angle_rotation, 0, 1, 1)
@@ -207,6 +233,7 @@ class OutilCreation:
             gluQuadricTexture(quadric, GL_TRUE)
             gluSphere(quadric, planet_radius, 100, 30)
 
+            #Draw selection
             if self.selected_object_creation and obj == self.selected_object_creation:
                 glDisable(GL_TEXTURE_2D)
                 glEnable(GL_BLEND)
@@ -225,12 +252,6 @@ class OutilCreation:
                 glColor4f(1,1,1,1)
             glPopMatrix()
 
-
-
-
-
-
-            # Update counters to position the next planet
             col_count += 1
             if col_count == num_planets_per_row:
                 col_count = 0
@@ -243,31 +264,8 @@ class OutilCreation:
         glPopMatrix()
         glMatrixMode(GL_MODELVIEW)
         glViewport(0, 0, self.width, self.height)
-        row_count = 0
-        col_count = 0
-        labels = []
-        """
-        # Draw all the labels after restoring the projection
-        for planet_name, texture in self.textures.items():
-
-            x_label_relative_to_planet = start_x + col_count * (gap + 2 * planet_radius)
-            y_label_relative_to_planet = start_y - row_count * (gap + 2 * planet_radius) - 2.5 * planet_radius
 
 
-            x_label_window = (x_label_relative_to_planet / half_width_of_line + 1) * 0.5 * (self.largeur - 2 * self.padding) + self.x + self.padding
-            y_label_window = (y_label_relative_to_planet / half_height_of_line + 1) * 0.5 * (self.hauteur - 2 * self.padding) + self.y + self.padding
-
-            labels.append(Label(self.RenderTool.window.get_size(), f'{planet_name}', x_label_window / self.RenderTool.window.width, y_label_window / self.RenderTool.window.height, self.SimulationState.font, (255, 255, 255, 200), 3))
-
-
-
-        for label in labels:
-            label.draw()"""
-
-
-
-"""        if self.SimulationState.isCreating:
-            self.SimulationState.OutilCreation.draw()"""
 
 
 
