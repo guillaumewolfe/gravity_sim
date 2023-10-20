@@ -41,9 +41,9 @@ class OutilCreation:
         #highlight Object Selection tecture
         self.selected_object_creation = None
         self.highlight_color = (0,1,1,0.3)
-        self.label_selected_object = ""
+        self.label_sous_titre = ""
         self.type_object_celeste_mapping_color = {1:(250,237,97,200),2:(0,255,0,120),3:(139,69,19,150),4:(50,50,50,255)}
-        self. label_selected_object_color = (255,255,255,255)
+        self. label_sous_titre_color = (255,255,255,255)
 
         #Choix de position
         self.etat_position = 1
@@ -53,6 +53,12 @@ class OutilCreation:
         self.souris_y = 0
 
         self.appended = False
+
+        #Sons
+        self.confirmation_sound = pyglet.media.load('assets/sounds/confirm_creation.wav', streaming=False)
+
+
+        self.CreationConfirmed = False
 
 
 
@@ -75,14 +81,23 @@ class OutilCreation:
         self.highlight_color = (0,1,1,0.3)
         self.selected_object_creation = None
         self.etat_present = 0
+        self.etat_position = 1
         self.object_created = Object_creation(None,None,None,None)
+        self.appended = False
+        self.CreationConfirmed = False
+        
 
     def end(self):
-        self.reset()
         self.SimulationState.isCreating = False
         self.SimulationState.button_activation(True)
         self.SimulationState.pause()
+        self.SimulationState.reset_positions()
         self.SimulationState.buttons[6].isOn = 1
+        if self.appended and not self.CreationConfirmed:
+            self.SimulationState.objects.pop()
+        self.reset()
+
+
         
         
 
@@ -99,16 +114,24 @@ class OutilCreation:
 
     def choix_position(self):
         self.Titre_label = "Choose position"
+        if 0.495 < self.souris_y < 0.505 :
+            self.souris_y = 0.5
+
         if self.etat_position == 1:
+            self.label_sous_titre = "Selection de l'axe des X"
             self.SimulationState.objects[-1].position_simulation[0] = (self.souris_x-0.5) * self.RenderTool.maxlength / 0.5
         elif self.etat_position == 2:
             self.SimulationState.objects[-1].position_simulation[2] = -(self.souris_y-0.5) * self.RenderTool.maxlength / 0.5
+            self.label_sous_titre = "Selection de l'axe des Z"
         elif self.etat_position == 3:
             self.SimulationState.objects[-1].position_simulation[1] = (self.souris_y-0.5) * self.RenderTool.maxlength / 0.5
+            self.label_sous_titre = "Selection de l'axe des Y"
         elif self.etat_position == 4:
             self.SimulationState.objects[-1].real_position = [SimulationScale.from_distance(coord) for coord in self.SimulationState.objects[-1].position_simulation]
-            
+            self.confirmation_sound.play()
+            self.CreationConfirmed = True
             self.end()
+
 
 
     def choix_vitesse(self):
@@ -133,7 +156,7 @@ class OutilCreation:
         rec.draw()
         rec2.draw()
         Label(self.RenderTool.window.get_size(), self.Titre_label, ((self.x+self.largeur)/2)/self.RenderTool.window.width, (self.y+self.hauteur)/self.RenderTool.window.height-0.06, self.SimulationState.font, (255, 255, 255, 200), 1.8).draw()
-        Label(self.RenderTool.window.get_size(), self.label_selected_object, ((self.x+self.largeur)/2)/self.RenderTool.window.width, (self.y+self.hauteur)/self.RenderTool.window.height-0.13, self.SimulationState.font, self.label_selected_object_color, 2).draw()
+        Label(self.RenderTool.window.get_size(), self.label_sous_titre, ((self.x+self.largeur)/2)/self.RenderTool.window.width, (self.y+self.hauteur)/self.RenderTool.window.height-0.13, self.SimulationState.font, self.label_sous_titre_color, 2).draw()
     
     def draw(self):
         self.width = self.SimulationState.window.width
@@ -153,7 +176,7 @@ class OutilCreation:
 
     def next_etat(self):
         if self.etat_present == 0:
-            self.label_selected_object =""
+            self.label_sous_titre =""
             self.etat_present = 3
             return
 
@@ -173,15 +196,22 @@ class OutilCreation:
             if self.etat_present == 0:
                 self.selected_object_creation = self.RenderTool.selection_mode(x,y,mode=1,liste_objects = self.objects_creations)
                 if self.selected_object_creation:
-                    self.label_selected_object_color = self.type_object_celeste_mapping_color.get(self.selected_object_creation.type_object)
-                    self.label_selected_object = self.selected_object_creation.name
+                    self.label_sous_titre_color = self.type_object_celeste_mapping_color.get(self.selected_object_creation.type_object)
+                    self.label_sous_titre = self.selected_object_creation.name
                 else:
-                    self.label_selected_object = ""
+                    self.label_sous_titre = ""
         if self.etat_present == 3:
             self.souris_x = x/self.width
             self.souris_y = y/self.height
 
 
+    def axe_rotation_position(self):
+        if self.etat_position == 1:
+            self.SimulationState.focus_on_axes("y")
+        elif self.etat_position ==2 :
+            self.SimulationState.focus_on_axes("y")
+        elif self.etat_position == 3 :
+            self.SimulationState.focus_on_axes("z")
 
     def calculate_mouse_distance(self):
         # Ajustez les coordonnées de la souris pour qu'elles soient centrées autour de (0.5, 0.5)
@@ -219,16 +249,27 @@ class OutilCreation:
     def on_key_press(self,symbol):
         if symbol == pyglet.window.key.Q:
             if self.etat_present == 3: #CHOIX DES POSITIONS
-                if self.etat_position == 1: #On choisi en X
-                    pass
-                if self.etat_position == 2:#On choixi en Z
-                    self.SimulationState.focus_on_axes("z")      
-                if self.etat_position == 3:
-                    print("fini")         
                 self.etat_position+=1
+                self.axe_rotation_position()
+
+    
         if symbol == pyglet.window.key.E:
-            self.etat_position+=1
-            print(self.etat_position)
+            if self.etat_present == 3:
+                if self.etat_position > 1:
+                    self.etat_position-=1
+                    self.axe_rotation_position()
+
+
+        
+
+
+
+
+        if symbol == pyglet.window.key.W:
+            #CLOSE
+            self.end()
+
+
 
 
 

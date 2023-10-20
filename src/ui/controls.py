@@ -85,17 +85,16 @@ def handle_input(window, current_state):
             current_state.modify_time_modifier(-1)
         if symbol == pyglet.window.key.SPACE:
             current_state.pause()
+        if symbol == pyglet.window.key.ESCAPE:
+            return pyglet.event.EVENT_HANDLED
 
 
 
 
         if hasattr(current_state, 'isCreating'):
-            if current_state.isCreating:
-                if symbol == pyglet.window.key.Q:
-                    current_state.OutilCreation.on_key_press(symbol)
-                if symbol == pyglet.window.key.E:
-                    current_state.OutilCreation.on_key_press(symbol)
 
+            if current_state.isCreating:
+                current_state.OutilCreation.on_key_press(symbol)
         
 
 
