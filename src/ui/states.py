@@ -318,6 +318,7 @@ class SimulationState(BaseState):
         self.rotation_x = -self.renderTool.rotation_initiale[2] + diffx
         self.rotation_y = -self.renderTool.rotation_initiale[1] + diffy
         self.rotation_z = -self.renderTool.rotation_initiale[0] + diffz
+        self.zoom += -200
         
 
     def update_render_tool(self):

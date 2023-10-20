@@ -87,10 +87,16 @@ def handle_input(window, current_state):
             current_state.pause()
 
 
-        if symbol == pyglet.window.key.Q:
-            current_state.OutilCreation.YO += 0.01
-        if symbol == pyglet.window.key.E:
-            current_state.OutilCreation.YO -= 0.01
+
+
+        if hasattr(current_state, 'isCreating'):
+            if current_state.isCreating:
+                if symbol == pyglet.window.key.Q:
+                    current_state.OutilCreation.on_key_press(symbol)
+                if symbol == pyglet.window.key.E:
+                    current_state.OutilCreation.on_key_press(symbol)
+
+        
 
 
 
