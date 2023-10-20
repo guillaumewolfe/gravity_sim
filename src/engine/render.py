@@ -746,7 +746,6 @@ class RenderTool:
 
         glPopMatrix()
 
-        glDisable(GL_TEXTURE_2D)
         glDisable(GL_LIGHTING)
         glDisable(GL_LIGHT0)
 

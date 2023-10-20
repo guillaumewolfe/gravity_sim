@@ -48,6 +48,8 @@ class OutilCreation:
         self.souris_x = 0
         self.souris_y = 0
 
+        self.appended = False
+
 
 
     def createObjectCreation(self):
@@ -71,6 +73,10 @@ class OutilCreation:
         self.etat_present = 0
         self.object_created = Object_creation(None,None,None,None)
 
+    def end(self):
+        self.reset()
+        self.SimulationState.isCreating = False
+        
 
     def choix_texture(self):
         self.Titre_label = "Select Celestial Object"
@@ -95,9 +101,9 @@ class OutilCreation:
         pass
 
     def append_to_list(self):
-        self.SimulationState.objects.append(CelestialObject(self.object_created.name,self.object_created.texture, texture_isLoaded=True,rayon_simulation=5))
-
-
+        self.SimulationState.objects.append(CelestialObject(self.object_created.name,self.object_created.texture, texture_isLoaded=True,rayon_simulation=5,type_object=self.object_created.type_object))
+        self.appended = True
+    
 
 
 

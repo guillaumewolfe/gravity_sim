@@ -105,6 +105,21 @@ CELESTIAL_PARAMETERS = [
         "texture_path": "assets/textures/uranus.jpg"
     },
     {
+        "name": "Saturne",
+        "type": 2,
+        "relation": "Soleil",
+        "real_distance": 1_426_666_422e3,
+        "real_radius": 58232e3,
+        "weight": 5.683e26,
+        "velocity": [0, 0, -9.68e3],
+        "accel": [0, 0, 0],
+        "inclinaison": 26.73,
+        "rotation_siderale_angle": 0,
+        "rotation_siderale_vitesse": 0.0093,
+        "rotation_siderale_direction": [0, 1, 0],
+        "texture_path": "assets/textures/saturn.jpg"
+    },
+    {
         "name": "Neptune",
         "type": 2,
         "relation": "Soleil",
@@ -119,21 +134,6 @@ CELESTIAL_PARAMETERS = [
         "rotation_siderale_direction": [0, 1, 0],
         "texture_path": "assets/textures/neptune.jpg"
     },
-    {
-        "name": "Saturne",
-        "type": 2,
-        "relation": "Soleil",
-        "real_distance": 1_426_666_422e3,
-        "real_radius": 58232e3,
-        "weight": 5.683e26,
-        "velocity": [0, 0, -9.68e3],
-        "accel": [0, 0, 0],
-        "inclinaison": 26.73,
-        "rotation_siderale_angle": 0,
-        "rotation_siderale_vitesse": 0.0093,
-        "rotation_siderale_direction": [0, 1, 0],
-        "texture_path": "assets/textures/saturn.jpg"
-    }
 ]
 
 
