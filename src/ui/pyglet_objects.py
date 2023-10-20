@@ -31,7 +31,10 @@ class Button:
         self.sounds["hover"] = pyglet.media.load('assets/sounds/select.wav', streaming=False)
         self.sounds["warning"] = pyglet.media.load('assets/sounds/warning_click.wav', streaming=False)
         self.sounds["selectionPlanete"] = pyglet.media.load('assets/sounds/selection_planete.wav', streaming=False)
+        self.sounds["addObject"] = pyglet.media.load('assets/sounds/open_creation.wav', streaming=False)
+        self.sounds["removeObject"] = pyglet.media.load('assets/sounds/delete.wav', streaming=False)
         
+
         self.hoverSound = pyglet.media.load('assets/sounds/select.wav', streaming=False)
         self.ButtonSound = self.sounds[button_sound]
 
@@ -134,6 +137,9 @@ class Button:
     def unclick(self):
         if not self.enabled: return
         self.padding_color = self.padding_color_perm
+    def change_sound(self,sound):
+        self.ButtonSound = self.sounds[sound]
+
 
 class Label:
     def __init__(self, size, text, x_percent, y_percent,font,color, font_size_percent=5,enable = True,x_anchor = "center",y_anchor="center"):

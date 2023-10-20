@@ -16,7 +16,7 @@ class OutilCreation:
         self.textures = textures
         self.RenderTool = RenderTool
         self.SimulationState = SimulationState
-        self.object_created = Object_creation(None,None,None)
+        self.object_created = Object_creation(None,None,None,None)
         self.angle_rotation = 0
         self.Titre_label = ""
 
@@ -34,12 +34,16 @@ class OutilCreation:
         self.rayon = 0
         self.position = [0,0,0]
         self.vitesse = [0,0,0]
-        self.rec_opacity = 100
-        self.rec2_opacity = 200
+        self.rec_opacity = 20
+        self.rec2_opacity = 100
 
         #highlight Object Selection tecture
         self.selected_object_creation = None
         self.highlight_color = (0,1,1,0.3)
+        self.label_selected_object = ""
+        self.type_object_celeste_mapping_color = {1:(250,237,97,200),2:(0,255,0,120),3:(139,69,19,150),4:(50,50,50,255)}
+        self. label_selected_object_color = (255,255,255,255)
+
 
 
     def createObjectCreation(self):
@@ -47,8 +51,13 @@ class OutilCreation:
         color = (25,25,25)
         liste = []
         for name, texture in self.textures.items():
-            
-            liste.append(Object_creation(name,texture,[i*color[n] for n,u in enumerate(color)]))
+            if name == "Soleil":
+                object_type = 1
+            elif name == "Black Hole":
+                object_type = 4
+            else:
+                object_type = 2
+            liste.append(Object_creation(name,texture,[i*color[n] for n,u in enumerate(color)],object_type))
             i+=1
         return liste
     def reset(self):
@@ -56,7 +65,7 @@ class OutilCreation:
         self.highlight_color = (0,1,1,0.3)
         self.selected_object_creation = None
         self.etat_present = 0
-        self.object_created = None
+        self.object_created = Object_creation(None,None,None,None)
 
 
     def choix_texture(self):
@@ -96,8 +105,7 @@ class OutilCreation:
         rec.draw()
         rec2.draw()
         Label(self.RenderTool.window.get_size(), self.Titre_label, ((self.x+self.largeur)/2)/self.RenderTool.window.width, (self.y+self.hauteur)/self.RenderTool.window.height-0.06, self.SimulationState.font, (255, 255, 255, 200), 1.8).draw()
-
-
+        Label(self.RenderTool.window.get_size(), self.label_selected_object, ((self.x+self.largeur)/2)/self.RenderTool.window.width, (self.y+self.hauteur)/self.RenderTool.window.height-0.13, self.SimulationState.font, self.label_selected_object_color, 2).draw()
     def draw(self):
         self.width = self.SimulationState.window.width
         self.height = self.SimulationState.window.height
@@ -131,6 +139,11 @@ class OutilCreation:
             return
         if self.etat_present == 0:
             self.selected_object_creation = self.RenderTool.selection_mode(x,y,mode=1,liste_objects = self.objects_creations)
+            if self.selected_object_creation:
+                self.label_selected_object_color = self.type_object_celeste_mapping_color.get(self.selected_object_creation.type_object)
+                self.label_selected_object = self.selected_object_creation.name
+            else:
+                self.label_selected_object = ""
 
 
 
@@ -167,9 +180,9 @@ class OutilCreation:
         glEnable(GL_TEXTURE_2D)
 
         num_planets_per_row = 3
-        planet_radius = 3
-        gap = 3 * planet_radius
-        titre_marge = 2 * planet_radius  # Adjust as needed
+        planet_radius = 3.5
+        gap = 2.3 * planet_radius
+        titre_marge = 1 * planet_radius  # Adjust as needed
 
         half_width_of_line = 2 * gap + num_planets_per_row * 2 * planet_radius + (num_planets_per_row - 1) * gap
         half_height_of_line = 2 * planet_radius
@@ -202,8 +215,11 @@ class OutilCreation:
 
                 quadric = gluNewQuadric()
                 glColor4f(*self.highlight_color)
-                gluSphere(quadric, planet_radius*1.3, 100, 30)
-
+                color = self.type_object_celeste_mapping_color.get(self.selected_object_creation.type_object)[:3]
+                color = [n/255 for n in color]
+                for i in range(1,30):
+                    glColor4f(*color,0.15/i)
+                    gluSphere(quadric,planet_radius*(1+0.04*i),100,30)
                 glDisable(GL_BLEND)
                 glEnable(GL_TEXTURE_2D)
                 glColor4f(1,1,1,1)
@@ -256,7 +272,8 @@ class OutilCreation:
 
 
 class Object_creation:
-    def __init__(self,name,texture,color_id):
+    def __init__(self,name,texture,color_id,type_object):
         self.name = name
         self.texture = texture
         self.color_id = color_id
+        self.type_object = type_object

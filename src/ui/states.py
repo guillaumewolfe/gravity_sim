@@ -238,8 +238,8 @@ class SimulationState(BaseState):
             Button(self.window, 0.26, restart_pos, 0.0800, 0.035, "Reset Camera", (255, 255, 255),self.font,opacity=20,button_sound="normal"),
             Button(self.window, 0.900, 0.451, 0.0375, 0.030, "Zoom", (255, 255, 255),self.font,opacity=20,enable=False,button_sound="normal",isHighlight=True,highlight_color=(0,255,0,80)),
             Button(self.window, 0.26, menu_pos, 0.0800, 0.035, "Axes", (255, 255, 255),self.font,opacity=20,isHighlight=True,isOn=2,button_sound="normal"),
-            Button(self.window, 0.9, add_pos, 0.1175, 0.045, "Add Object", (255, 255, 255),self.font,opacity=20,button_sound="normal"),
-            Button(self.window, 0.955, 0.925, 0.0355, 0.030, "Remove", (255, 255, 255),self.font,opacity=20,enable=False,button_sound="normal",isHighlight=True,highlight_color=(255,0,0,120))
+            Button(self.window, 0.9, add_pos, 0.1175, 0.045, "Add Object", (255, 255, 255),self.font,opacity=20,button_sound="addObject"),
+            Button(self.window, 0.955, 0.925, 0.0355, 0.030, "Remove", (255, 255, 255),self.font,opacity=20,enable=False,button_sound="removeObject",isHighlight=True,highlight_color=(255,0,0,120))
             ]
         self.objects = create_celestial_objects(CELESTIAL_PARAMETERS)
         background_image = pyglet.image.load("assets/textures/background.jpg")
@@ -266,7 +266,7 @@ class SimulationState(BaseState):
 
     def load_textures(self):
         textures_loaded = {}
-        textures = {"Glace":"assets/textures/fictionnal_ice.jpg","Rocheuse":"assets/textures/fictionnal_terre.jpg","Soleil":"assets/textures/sun.jpg","Terre":"assets/textures/earth_real.jpg","Mars":"assets/textures/mars.jpg","Uranus":"assets/textures/uranus.jpg","Neptune":"assets/textures/Neptune.jpg"}
+        textures = {"Glace":"assets/textures/fictionnal_ice.jpg","Rocheuse":"assets/textures/fictionnal_terre.jpg","Soleil":"assets/textures/sun.jpg","Terre":"assets/textures/earth_real.jpg","Mars":"assets/textures/mars.jpg","Uranus":"assets/textures/uranus.jpg","Neptune":"assets/textures/Neptune.jpg","Jupiter":"assets/textures/jupiter.jpg","Black Hole":"assets/textures/black_hole.jpg"}
         for planet_name, texture_path in textures.items():
             textures_loaded[planet_name] = pyglet.image.load(texture_path).get_texture()
         return textures_loaded
@@ -391,10 +391,8 @@ class SimulationState(BaseState):
         for btn in self.buttons:
             if btn.text == "Pause":
                 btn.text = "Resume"
-                btn.play_sound()
             elif btn.text == "Resume":
                 btn.text = "Pause"
-                btn.play_sound()
                 
         if self.isPaused:
             self.isPaused=False
@@ -421,6 +419,7 @@ class SimulationState(BaseState):
 
                 if btn.text == "Pause" or btn.text == "Resume":
                     self.pause()
+                    btn.play_sound()
 
                 
                 if btn.text == "Reset Camera":
@@ -446,6 +445,7 @@ class SimulationState(BaseState):
                         self.renderTool.axesEnable = True
                         btn.isOn = 1
                     btn.play_sound()
+
                 if btn.text == "Add Object":
                     if not self.isCreating:
                         if not self.isPaused:
@@ -455,13 +455,18 @@ class SimulationState(BaseState):
                         self.isCreating = True
                         btn.isHighligh=True
                         btn.isOn=2
+                        btn.play_sound()
+                        btn.change_sound("normal")
                     else:
                         self.button_activation(True)
                         self.isCreating = False
                         btn.isHighligh = False
                         btn.isOn=0
                         self.pause()
-                    btn.play_sound()
+                        self.OutilCreation.reset()
+                        btn.play_sound()
+                        btn.change_sound("addObject")
+                    
 
 
 

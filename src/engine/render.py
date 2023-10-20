@@ -637,11 +637,10 @@ class RenderTool:
         far = 100
         gluPerspective(fov, aspect_ratio, near, far)
 
-
         num_planets_per_row = 3
-        planet_radius = 3
-        gap = 3 * planet_radius
-        titre_marge = 2 * planet_radius  # Adjust as needed
+        planet_radius = 3.5
+        gap = 2.3 * planet_radius
+        titre_marge = 1 * planet_radius  # Adjust as needed
 
         half_width_of_line = 2 * gap + num_planets_per_row * 2 * planet_radius + (num_planets_per_row - 1) * gap
         half_height_of_line = 2 * planet_radius
