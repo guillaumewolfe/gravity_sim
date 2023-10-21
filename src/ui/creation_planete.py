@@ -9,6 +9,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 #from src.engine import render
 from celestial_objects import CelestialObject,create_celestial_objects,CELESTIAL_PARAMETERS,SimulationScale
 from src.ui.pyglet_objects import Label,Button
+import numpy as np
+import ctypes
 
 
 class OutilCreation:
@@ -22,8 +24,8 @@ class OutilCreation:
         self.Titre_label = ""
 
         #États
-        self.etats = ["texture","masse","rayon","position","choix_vitesse","append_to_list"]
-        self.liste_etats = {"texture" : self.choix_texture, "masse" : self.choix_masse, "rayon": self.choix_rayon, "position":self.choix_position, "append_to_list":self.append_to_list,"vitesse":self.choix_vitesse}
+        self.etats = ["texture","masse","rayon","position","choix_vitesse"]
+        self.liste_etats = {"texture" : self.choix_texture, "masse" : self.choix_masse, "rayon": self.choix_rayon, "position":self.choix_position, "append_to_list":self.append_to_list,"choix_vitesse":self.choix_vitesse}
         self.etat_present = 0
 
         #crée la liste d'objets
@@ -46,7 +48,12 @@ class OutilCreation:
         self. label_sous_titre_color = (255,255,255,255)
 
         #Choix de position
-        self.etat_position = 1
+        self.etat_present_SUB = 0
+
+        #Choix vitesse
+        self.G = 6.67430e-11
+        self.choix_vitesse_object_centre = None
+        self.choix_vitesse_force_initiale = 0
 
         #Souris
         self.souris_x = 0
@@ -77,14 +84,20 @@ class OutilCreation:
             i+=1
         return liste
     def reset(self):
-
         self.highlight_color = (0,1,1,0.3)
         self.selected_object_creation = None
         self.etat_present = 0
-        self.etat_position = 1
+        self.etat_present_SUB = 0
         self.object_created = Object_creation(None,None,None,None)
+
+        if self.appended and not self.CreationConfirmed: #On enleve l'object si la creation n'a pas été confirmé
+            self.SimulationState.objects.pop()
         self.appended = False
         self.CreationConfirmed = False
+        self.choix_vitesse_object_centre = None
+        self.choix_vitesse_force_initiale = 0
+
+
         
 
     def end(self):
@@ -93,51 +106,76 @@ class OutilCreation:
         self.SimulationState.pause()
         self.SimulationState.reset_positions()
         self.SimulationState.buttons[6].isOn = 1
-        if self.appended and not self.CreationConfirmed:
-            self.SimulationState.objects.pop()
         self.reset()
 
-
         
         
 
-    def choix_texture(self):
+    def choix_texture(self): #ETAT #0 (PREMIER)
         self.Titre_label = "Select Celestial Object"
         self.dessiner_planets()
 
 
-    def choix_masse(self):
+    def choix_masse(self): #ETAT #1 
         self.Titre_label = "Mass Specification"
 
-    def choix_rayon(self):
+    def choix_rayon(self):#ETAT #2 
         pass
 
-    def choix_position(self):
+    def choix_position(self):#ETAT #3 
         self.Titre_label = "Choose position"
         if 0.495 < self.souris_y < 0.505 :
             self.souris_y = 0.5
 
-        if self.etat_position == 1:
+        if self.etat_present_SUB == 0:
             self.label_sous_titre = "Selection de l'axe des X"
             self.SimulationState.objects[-1].position_simulation[0] = (self.souris_x-0.5) * self.RenderTool.maxlength / 0.5
-        elif self.etat_position == 2:
+        elif self.etat_present_SUB == 1:
             self.SimulationState.objects[-1].position_simulation[2] = -(self.souris_y-0.5) * self.RenderTool.maxlength / 0.5
             self.label_sous_titre = "Selection de l'axe des Z"
-        elif self.etat_position == 3:
+        elif self.etat_present_SUB == 2:
             self.SimulationState.objects[-1].position_simulation[1] = (self.souris_y-0.5) * self.RenderTool.maxlength / 0.5
             self.label_sous_titre = "Selection de l'axe des Y"
-        elif self.etat_position == 4:
+        elif self.etat_present_SUB == 3:
             self.SimulationState.objects[-1].real_position = [SimulationScale.from_distance(coord) for coord in self.SimulationState.objects[-1].position_simulation]
-            self.confirmation_sound.play()
-            self.CreationConfirmed = True
-            self.end()
+            self.SimulationState.focus_on_axes("y")
+            self.next_etat()
 
 
 
-    def choix_vitesse(self):
-        pass
 
-    def append_to_list(self):
+    def choix_vitesse(self):#ETAT #4 
+        #Titre
+        self.Titre_label = "Choose speed"
+
+        #Étape 0 : Selection de l'object qui exerce la plus grande force, ajout de l'object dans self.choix_vitesse_object_centre
+        #Etape 1 : Avec la souris, on calcul la vitesse initiale, puis on utilise cette vitesse pour dessiner l'éclipse
+        #Etape 2 : Confirmation de la commande + Creation de l'object self.end()
+
+
+        if self.etat_present_SUB == 0: #Etape 0
+            self.choix_vitesse_object_centre, self.choix_vitesse_force_initiale = self.calcul_choix_vitesse_force()
+            print("Here")
+            self.etat_present_SUB+=1 
+            self.SimulationState.focus_on_axes("y")
+
+        elif self.etat_present_SUB == 1: #On determine la vitesse en X
+            self.vitesse_Z = (self.souris_y-0.5) * 620 / 0.5
+            self.label_sous_titre = f"{self.vitesse_Z:.1f} km/s" 
+            self.draw_vecteur_vitesse()
+
+    def draw_vecteur_vitesse(self):
+        glPushMatrix()
+        glColor3f(1, 1, 1)
+        quadric = gluNewQuadric()
+        gluSphere(quadric, 20, 100, 30)
+        glPopMatrix()
+
+
+
+
+
+    def append_to_list(self):#On ajoute l'object créé
         weight = 5.972e24
         color_id = [i+25 for i in self.SimulationState.objects[-1].color_id] 
         self.SimulationState.objects.append(CelestialObject(self.object_created.name,self.object_created.texture, texture_isLoaded=True,rayon_simulation=5,type_object=self.object_created.type_object,weight=2*weight,color_id=color_id))
@@ -146,7 +184,7 @@ class OutilCreation:
 
 
 
-    def draw_background(self):
+    def draw_background(self): #Boucle pour Background
 
         self.padding = 5
         rec  = shapes.Rectangle(self.x, self.y, self.largeur, self.hauteur, color=(255,255,255))
@@ -175,6 +213,7 @@ class OutilCreation:
 
 
     def next_etat(self):
+        self.etat_present_SUB = 0
         if self.etat_present == 0:
             self.label_sous_titre =""
             self.etat_present = 3
@@ -200,17 +239,17 @@ class OutilCreation:
                     self.label_sous_titre = self.selected_object_creation.name
                 else:
                     self.label_sous_titre = ""
-        if self.etat_present == 3:
+        if self.etat_present == 3 or self.etat_present == 4:
             self.souris_x = x/self.width
             self.souris_y = y/self.height
 
 
     def axe_rotation_position(self):
-        if self.etat_position == 1:
+        if self.etat_present_SUB == 0:
             self.SimulationState.focus_on_axes("y")
-        elif self.etat_position ==2 :
+        elif self.etat_present_SUB ==1 :
             self.SimulationState.focus_on_axes("y")
-        elif self.etat_position == 3 :
+        elif self.etat_present_SUB == 2 :
             self.SimulationState.focus_on_axes("z")
 
     def calculate_mouse_distance(self):
@@ -249,28 +288,40 @@ class OutilCreation:
     def on_key_press(self,symbol):
         if symbol == pyglet.window.key.Q:
             if self.etat_present == 3: #CHOIX DES POSITIONS
-                self.etat_position+=1
+                self.etat_present_SUB+=1
                 self.axe_rotation_position()
 
     
         if symbol == pyglet.window.key.E:
-            if self.etat_present == 3:
-                if self.etat_position > 1:
-                    self.etat_position-=1
+            if self.etat_present == 3: #Si en mode position
+                if self.etat_present_SUB > 0: #On change entre les axes
+                    self.etat_present_SUB-=1
                     self.axe_rotation_position()
-
-
-        
-
-
-
-
-        if symbol == pyglet.window.key.W:
-            #CLOSE
+                else: #Si en premier axe(X), on passe à l'état précedant
+                    self.reset()
+                    self.etat_present = 0
+        if symbol == pyglet.window.key.ESCAPE:
             self.end()
 
 
 
+
+    def calcul_choix_vitesse_force(self):
+        object_orbite = self.SimulationState.objects[-1]
+        max_force = 0
+        max_object = None
+        for obj in self.SimulationState.objects[:-1]:
+            force = self.calcul_force(obj.weight,object_orbite.weight,obj.real_position,object_orbite.real_position)
+            if force > max_force:
+                max_force = force
+                max_object = obj
+        return max_object,max_force
+
+    def calcul_force(self,m1,m2,p1,p2):
+        distance = np.linalg.norm(np.array(p1) - np.array(p2))
+        force = (self.G*m1*m2)/(distance**2)
+        #print(f"Distance : {distance}        force : {force}")
+        return force
 
 
 

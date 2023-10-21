@@ -140,7 +140,7 @@ class StartMenuState(BaseState):
             StartMenuState.musicPlayer.queue(self.background_music)
             StartMenuState.musicPlayer.loop = True
             StartMenuState.musicPlayer.play()
-            StartMenuState.musicPlayer.pause()
+            #StartMenuState.musicPlayer.pause()
 
 
     def setup_2d_projection(self):
@@ -464,7 +464,7 @@ class SimulationState(BaseState):
                         btn.isHighligh = False
                         btn.isOn=0
                         self.pause()
-                        self.OutilCreation.reset()
+                        self.OutilCreation.end()
                         btn.play_sound()
                         btn.change_sound("addObject")
                     

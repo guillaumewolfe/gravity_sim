@@ -86,6 +86,10 @@ def handle_input(window, current_state):
         if symbol == pyglet.window.key.SPACE:
             current_state.pause()
         if symbol == pyglet.window.key.ESCAPE:
+            if hasattr(current_state, 'isCreating'):
+
+                if current_state.isCreating:
+                    current_state.OutilCreation.on_key_press(symbol)
             return pyglet.event.EVENT_HANDLED
 
 

@@ -746,8 +746,7 @@ class RenderTool:
 
         glPopMatrix()
 
-        glDisable(GL_LIGHTING)
-        glDisable(GL_LIGHT0)
+
 
 
     def draw_axes(self, length=50, position = [0,0,0]):
@@ -1024,6 +1023,8 @@ class RenderTool:
         glDisable(GL_LIGHTING)
         glDisable(GL_LIGHT0)  
     
+
+
     def draw(self):
 
         #Setup 2D + Fond d'écran
