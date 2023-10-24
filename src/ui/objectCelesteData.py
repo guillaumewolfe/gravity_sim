@@ -79,7 +79,7 @@ CELESTIAL_PARAMETERS = [
         "type": 2,
         "relation": "Soleil",
         "real_distance": 778_340_821e3,
-        "real_radius": 69911e3,
+        "real_radius": 69_911e3,
         "weight": 1.898e27,
         "velocity": [0, 0, -13.07e3],
         "accel": [0, 0, 0],
@@ -134,6 +134,55 @@ CELESTIAL_PARAMETERS = [
         "rotation_siderale_direction": [0, 1, 0],
         "texture_path": "assets/textures/neptune.jpg"
     },
+    {
+        "name": "Lune",
+        "type": 2,
+        "relation": "Terre",
+        "real_distance": 384400e3,  # en mètres
+        "real_radius": 1737.5e3,  # en mètres
+        "weight": 7.342e22,  # en kg
+        "velocity": [0, -1.022e3, -29.78e3],  # en m/s, supposons que la vitesse soit dans la direction x pour simplifier
+        "accel": [0, 0, 0],
+        "inclinaison": 0,
+        "rotation_siderale_angle": 0,
+        "rotation_siderale_vitesse": 0,
+        "rotation_siderale_direction": [0,0,0],
+        "texture_path": "assets/textures/lunar.jpg"
+    },
+
+
+
+
+{
+    "name": "Ice",
+    "type": 2,
+    "relation": "Soleil",
+    "real_distance": 300_000_000_000,  # 300,000,000 kilometers in meters
+    "real_radius": 4_000_000,  # 4,000 kilometers in meters
+    "weight": 1.2e23,  # 1.2e23 kg
+    "velocity": [0, 0, -25_000],  # Initial velocity in m/s (negative Z direction)
+    "accel": [0, 0, 0],
+    "inclinaison": 10,  # 10 degrees
+    "rotation_siderale_angle": 0,
+    "rotation_siderale_vitesse": 1 / 400,  # 1/400 degrees per second
+    "rotation_siderale_direction": [0, 1, 0],  # Counterclockwise rotation around the Y-axis
+    "texture_path": "assets/textures/fictionnal_ice.jpg"
+},
+{
+    "name": "Rock",
+    "type": 2,
+    "relation": "Soleil",
+    "real_distance": 150_000_000_000,  # 150,000,000 kilometers in meters
+    "real_radius": 50_000_000,  # 6,000 kilometers in meters
+    "weight": 3*5.972e24,  # 5.0e24 kg
+    "velocity": [0, 0, -20_000],  # Initial velocity in m/s (negative Z direction)
+    "accel": [0, 0, 0],
+    "inclinaison": 15,  # 15 degrees
+    "rotation_siderale_angle": 0,
+    "rotation_siderale_vitesse": 1 / 600,  # 1/600 degrees per second
+    "rotation_siderale_direction": [0, 1, 0],  # Counterclockwise rotation around the Y-axis
+    "texture_path": "assets/textures/fictionnal_terre.jpg"
+}
 ]
 
 

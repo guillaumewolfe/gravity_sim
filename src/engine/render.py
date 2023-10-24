@@ -12,6 +12,8 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 from src.ui.pyglet_objects import Label,Button
 from src.ui.states import SimulationState
+from src.engine.engine_tools.general_render_tools import GeneralRenderTools as RT
+from src.ui.cameras import *
 
 class RenderTool:
     def __init__(self,window, labels, buttons, objects, rotation_x, rotation_y, rotation_z, translation_x,translation_y,zoom,backgroundTexture,font=None,SimulationState = None):
@@ -31,8 +33,9 @@ class RenderTool:
         self.translation_x = translation_x
         self.translation_y = translation_y
         self.zoom = zoom
+        self.general_tools = RT(self)
 
-        self.translation_initiale = (0, 0,-150)
+        self.translation_initiale = (0, 0,-700)
         self.rotation_initiale = (0,100, 10.5)
 
         #Initiate only
@@ -44,9 +47,10 @@ class RenderTool:
         self.followObjectEnabled = False
         self.followObject = None
 
+        #Camera
         #Highligh
         self.frame_counter = 0
-
+        self.move_camera()
         #Axe et plane
         self.axesEnable = False
         self.axesDrawned = False
@@ -60,9 +64,8 @@ class RenderTool:
         op = 150
         self.type_object_celeste_mapping_color = {1:(250,237,97,op),2:(0,255,0,op),3:(139,69,19,op),4:(1,1,1,op)}
 
-
-
-
+        #CAMERAS
+        self.current_camera = CameraZ(0,0,0,0,0,0)
 
         #Background
         self.bg_texture1 = pyglet.image.load('assets/textures/background_alpha1.png').get_texture()
@@ -242,6 +245,7 @@ class RenderTool:
         scale = 4
         scale_radius = 5
         for obj in self.objects:
+
             glBindTexture(GL_TEXTURE_2D, obj.texture.id)
             glPushMatrix()
             position_minimap = self.scale_minimap_position(obj.position_simulation,length)
@@ -346,78 +350,6 @@ class RenderTool:
 
     
 
-
-    def set_background(self):
-        glEnable(GL_TEXTURE_2D)
-        glBindTexture(GL_TEXTURE_2D, self.background_texture.id)
-        glBegin(GL_QUADS)
-        glTexCoord2f(0, 0)
-        glVertex2f(0, 0)
-        glTexCoord2f(1, 0)
-        glVertex2f(self.window.width, 0)
-        glTexCoord2f(1, 1)
-        glVertex2f(self.window.width, self.window.height)
-        glTexCoord2f(0, 1)
-        glVertex2f(0, self.window.height)
-        glEnd()
-        glDisable(GL_TEXTURE_2D)
-    
-    def set_background_test(self):
-        glEnable(GL_TEXTURE_2D)
-
-        rotation_offset_x = self.rotation_y*0.01
-        rotation_offset_y = -self.rotation_x*0.01
-
-
-
-        offset_x1 = self.translation_x * 0.01 + rotation_offset_x
-        offset_y1 = self.translation_y * 0.01 + rotation_offset_y
-
-        glBindTexture(GL_TEXTURE_2D, self.bg_texture2.id)
-        self.draw_quad_with_offset(offset_x1,offset_y1)
-
-        offset_x2 = self.translation_x * 0.05 + rotation_offset_x
-        offset_y2 = self.translation_y * 0.05 + rotation_offset_y
-        
-        glBindTexture(GL_TEXTURE_2D, self.bg_texture2.id)
-        self.draw_quad_with_offset(offset_x2,offset_y2,2)
-
-
-        offset_x3 = self.translation_x * 2 - rotation_offset_x*20
-        offset_y3 = self.translation_y * 2 - rotation_offset_y*20
-
-        glBindTexture(GL_TEXTURE_2D, self.background_texture.id)
-        self.draw_quad_with_offset(offset_x3,offset_y3,2)
-
-    
-
-
-
-
-        glDisable(GL_TEXTURE_2D)
-
-
-    def draw_quad_with_offset(self, offset_x, offset_y, zoom_factor=1.0):
-        # Calculate the zoomed dimensions
-        zoomed_width = self.window.width * zoom_factor
-        zoomed_height = self.window.height * zoom_factor
-
-        # Calculate the difference to adjust the vertices
-        diff_width = (self.window.width - zoomed_width) / 2
-        diff_height = (self.window.height - zoomed_height) / 2
-
-        glBegin(GL_QUADS)
-        glTexCoord2f(0, 0)
-        glVertex2f(diff_width + offset_x, diff_height + offset_y)
-        glTexCoord2f(1, 0)
-        glVertex2f(zoomed_width + offset_x, diff_height + offset_y)
-        glTexCoord2f(1, 1)
-        glVertex2f(zoomed_width + offset_x, zoomed_height + offset_y)
-        glTexCoord2f(0, 1)
-        glVertex2f(diff_width + offset_x, zoomed_height + offset_y)
-        glEnd()
-
-
     
     def move_camera(self):
         
@@ -425,14 +357,16 @@ class RenderTool:
             x_followObject = self.followObject.position_simulation[0]
             y_followObject = self.followObject.position_simulation[1]
             z_followObject = self.followObject.position_simulation[2]
+            z_object = -100+self.zoom
         else:
             x_followObject,y_followObject,z_followObject = 0,0,0
+            z_object = self.translation_initiale[2]+self.zoom
 
         glLoadIdentity()
         #Translation initiale + Zoom
         #Translation selon le mouvement
         glTranslatef(self.translation_x,self.translation_y,0)
-        glTranslatef(self.translation_initiale[0], self.translation_initiale[1], self.translation_initiale[2]+self.zoom)
+        glTranslatef(self.translation_initiale[0], self.translation_initiale[1], z_object)
         glRotatef(0, 1, 0, 0)  # Rotation autour de l'axe X
         glRotatef(self.rotation_y+self.rotation_initiale[1], 0, 1, 0)
         glRotatef(self.rotation_x+self.rotation_initiale[2], 0, 0, 1)
@@ -503,12 +437,17 @@ class RenderTool:
 
         # Move the camera according to direction
         self.move_camera()
-
+        
         # Now, for each object in your scene, set the color and draw it
         for obj in self.objects:
+            facteur_rayon = 5
+            if self.followObject:
+                if self.followObject.name == obj.name:
+                    facteur_rayon=1.5
+            if obj.name == "Soleil":
+                facteur_rayon=1.5
             # Extract the color_id (assuming it's in 0-255 range)
             r, g, b = obj.color_id
-
             # Convert the color to 0-1 range
             r /= 255.0
             g /= 255.0
@@ -523,7 +462,7 @@ class RenderTool:
                 glRotatef(obj.inclinaison, 1, 0, 0)
             #glRotatef(obj.rotation_siderale_angle, *obj.rotation_direction)
             quadric = gluNewQuadric()
-            gluSphere(quadric, obj.rayon_simulation, 60, 18)
+            gluSphere(quadric, obj.rayon_simulation*facteur_rayon, 60, 18)
             glPopMatrix()
 
     def render_minimap_with_colors(self):
@@ -690,26 +629,6 @@ class RenderTool:
         return None
 
 
-    def draw_planet_path(self):
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-        #glEnable(GL_LINE_SMOOTH)
-        #glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
-
-        for obj in self.objects:
-            if obj.drawOrbitEnable and len(obj.position_history) > 2:
-                glLineWidth(0.5) 
-                glBegin(GL_LINE_STRIP)
-                path_length = len(obj.position_history)  # Define the path_length here
-                for index, position in enumerate(obj.position_history):
-                    alpha = 0.75*(index / (path_length - 1))
-                    glColor4f(1, 1, 1, alpha)
-                    glVertex3f(position[0], position[1], position[2])
-                glEnd()  # Ensure glEnd is called for each object's path
-
-        glColor4f(1, 1, 1, 1)  # Reset color
-        glLineWidth(1)         # Reset line width
 
     def draw_saturn_ring(self, obj):
 
@@ -749,190 +668,6 @@ class RenderTool:
 
 
 
-    def draw_axes(self, length=50, position = [0,0,0]):
-        nbre_line = 20
-        glBegin(GL_LINES)
-        length = self.maxlength
-
-        glColor4f(1,1,1,0.5)
-        #Axe X
-        glVertex3f(position[0],position[1],position[2])
-        glVertex3f(position[0]+length,position[1],position[2])
-        
-        #Axe Z
-        glVertex3f(position[0],position[1],position[2])
-        glVertex3f(position[0],position[1],position[2]+length)
-        
-        #Axe Y
-        glVertex3f(position[0],position[1],position[2])
-        glVertex3f(position[0],position[1]+length,position[2])
-        # Drawing the grid with 50% opacity
-
-        grid_spacing = length/nbre_line
-        glColor4f(1,1,1,0.2)
-
-        temps = 10
-        if not self.axesDrawned:
-            dynamic_offset_factor = self.frame_counter_axes/temps
-            self.frame_counter_axes+=1
-            if self.frame_counter_axes >= temps:
-                self.axesDrawned = True
-        else:
-            dynamic_offset_factor = 1
-
-
-
-        for i in range(0, nbre_line):
-            offset = i * grid_spacing
-            dynamic_offset = offset*dynamic_offset_factor
-            
-            # Grid lines parallel to X-axis (both positive and negative Z direction)
-            glVertex3f(position[0] - length, position[1], position[2] + dynamic_offset)
-            glVertex3f(position[0] + length, position[1], position[2] + dynamic_offset)
-            
-            glVertex3f(position[0] - length, position[1], position[2] - dynamic_offset)
-            glVertex3f(position[0] + length, position[1], position[2] - dynamic_offset)
-
-            # Grid lines parallel to Z-axis (both positive and negative X direction)
-            glVertex3f(position[0] + dynamic_offset, position[1], position[2] - length)
-            glVertex3f(position[0] + dynamic_offset, position[1], position[2] + length)
-            
-            glVertex3f(position[0] - dynamic_offset, position[1], position[2] - length)
-            glVertex3f(position[0] - dynamic_offset, position[1], position[2] + length)
-
-
-        glColor4f(1,1,1,1)
-        glEnd()
-
-    def follow_line(self,position):
-        glBegin(GL_LINES)
-        glColor4f(1,1,1,0.6)
-        #Lign from the sun to the object
-        if self.followLineEnable:
-            glVertex3f(0,0,0)
-            glVertex3f(position[0],position[1],position[2])
-        glColor4f(1,1,1,1)
-        glEnd()
-
-    def draw_selected_object_infos(self, object):
-        y = 0.42
-        x = 0.82
-        largeur = 0.16
-        hauteur = 0.53
-        padding = 4
-        rec = shapes.Rectangle(self.window.width * x, self.window.height * y, self.window.width * largeur, self.window.height * hauteur, color=(41, 50, 69)) 
-        rec2 = shapes.Rectangle(self.window.width * x - padding / 2, self.window.height * y - padding / 2, self.window.width * largeur + padding, self.window.height * hauteur + padding, color=(255, 255, 255)) 
-        rec.opacity = 120 
-        rec2.opacity = 20
-        # Dessinez l'écriture
-        centrer_x = (self.window.width * (x + largeur / 2))/self.window.width
-        centrer_y = (self.window.height * (y + hauteur - 0.035))/self.window.height
-        # Configurez le viewport pour les rectangles
-    
-
-        # Dessinez les rectangles directement sans aucune modification de la projection
-        rec2.draw()
-        rec.draw()
-        diff = 0.025
-        hauteur_vitesse = 0.12
-        type_object = self.type_object_celeste_mapping.get(object.type_object)
-        couleur_type_object = self.type_object_celeste_mapping_color.get(object.type_object)
-        Label(self.window.get_size(), f'{object.name}', centrer_x, centrer_y, self.font, (255, 255, 255, 200), 2.5).draw()
-        Label(self.window.get_size(), f'{type_object}', centrer_x, centrer_y-0.035, self.font, couleur_type_object, 1.5).draw()
-        Label(self.window.get_size(), "Vitesse", centrer_x, centrer_y-0.10, self.font, (255,255,255,200), 1.5).draw()
-        Label(self.window.get_size(), f"{object.get_velocity():,.0f} km/h".replace(",", ' '), centrer_x, centrer_y-0.125, self.font, (255,255,255,150), 1.2).draw()
-
-        Label(self.window.get_size(), "Masse", centrer_x, centrer_y-0.160, self.font, (255,255,255,200), 1.5).draw()
-        Label(self.window.get_size(), f"{object.weight:,.2e} kg".replace(",", ' '), centrer_x, centrer_y-0.160-diff, self.font, (255,255,255,150), 1.2).draw()
-
-        Label(self.window.get_size(), "Rayon", centrer_x, centrer_y-0.155-diff-0.05, self.font, (255,255,255,200), 1.5).draw()
-        Label(self.window.get_size(), f"{object.real_radius:,.0f} km".replace(",", ' '), centrer_x, centrer_y-0.155-2*diff-0.05, self.font, (255,255,255,150), 1.2).draw()
-
-        if object.type_object !=1:
-            Label(self.window.get_size(), "Force gravitationnelle", centrer_x, centrer_y-0.155-2*diff-2*0.05, self.font, (255,255,255,200), 1.5).draw()
-            Label(self.window.get_size(), f"{object.get_force():,.2e} N".replace(",", ' '), centrer_x, centrer_y-0.155-3*diff-2*0.05, self.font, (255,255,255,150), 1.2).draw()
-        else:
-            Label(self.window.get_size(), "Température", centrer_x, centrer_y-0.155-2*diff-2*0.05, self.font, (255,255,255,200), 1.5).draw()
-            Label(self.window.get_size(), f"5 500 k".replace(",", ' '), centrer_x, centrer_y-0.155-3*diff-2*0.05, self.font, (255,255,255,150), 1.2).draw()
-
-
-        glViewport(int(self.window.width * x), int(self.window.height * y), int(self.window.width * largeur), int(self.window.height * hauteur))
-        # Configurez la projection pour le rendu 3D
-        glMatrixMode(GL_PROJECTION)
-        glPushMatrix()
-        glLoadIdentity()
-        fov = 35
-        aspect_ratio = (self.window.width * largeur) / (self.window.height * hauteur)
-        near = 0.1
-        far = 100
-        gluPerspective(fov, aspect_ratio, near, far)
-
-        # Dessinez la sphère
-        glEnable(GL_TEXTURE_2D)
-        glPushMatrix()
-        # Placez la caméra un peu plus loin pour voir correctement la sphère
-        glTranslatef(0, -19.5, -100)
-        #glRotatef(90,1,0,0)
-        self.rotation_matrix = self.extract_rotation_matrix(self.matrix)
-        glMultMatrixd(self.rotation_matrix)
-        glBindTexture(GL_TEXTURE_2D, object.texture.id)
-        glRotatef(self.selectedObject.rotation_siderale_angle,*self.selectedObject.rotation_direction)
-        quadric = gluNewQuadric()
-        gluQuadricTexture(quadric, GL_TRUE)
-        #object.rayon_simulation
-        gluSphere(quadric, 4, 100, 30)
-        glPopMatrix()
-
-        glDisable(GL_TEXTURE_2D)
-
-        # Restaurez la projection précédente
-        glMatrixMode(GL_PROJECTION)
-        glPopMatrix()
-        glMatrixMode(GL_MODELVIEW)
-
-        # Réinitialisez le viewport à ses dimensions originales
-        glViewport(0, 0, self.window.width, self.window.height)
-
-
-
-
-
-
-
-
-
-
-    def draw_highlight(self, obj):
-        scale_factor = 0.5 * math.sin(2 * math.pi * self.frame_counter / 90) + 0.5  # This oscillates between 0 and 1 over 60 frames
-        position = obj.position_simulation
-        """Draw a semi-transparent sphere around the selected object."""
-        # Color (47,233,240) with 0.5 transparency
-        colors = (255,255,255)
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
-
-        glColor4f(colors[0]/255, colors[1]/255, colors[2]/255, 0.10)
-        
-
-        glPushMatrix()
-        
-        # Translate to the object's position
-        glTranslatef(position[0], position[1], position[2])
-        
-        # Scale if necessary. You can adjust or remove this line depending on your needs.
-        #glScalef(scale, scale, scale)
-        
-        # Drawing the sphere (assuming you have the glu library with pyglet)
-        quad = gluNewQuadric()
-        for i in range(1,50):
-            glColor4f(1.0,1.0,1,(0.04+scale_factor/20)/(i))
-            gluSphere(quad,obj.rayon_simulation*(1+0.02*i),100,100)
-        gluDeleteQuadric(quad)
-
-
-        glPopMatrix()
-        glColor4f(1, 1, 1, 1)
-
     def draw_sun(self, obj):
         quadric = gluNewQuadric()
         gluQuadricTexture(quadric, GL_TRUE)
@@ -945,10 +680,11 @@ class RenderTool:
         glDisable(GL_DEPTH_TEST)
 
         glPushMatrix()
+        glTranslatef(obj.position_simulation[0], obj.position_simulation[1], obj.position_simulation[2])
         quadric = gluNewQuadric()
 
         for i in range(1,30):
-            glColor4f(1.0,1.0,0.8,0.06/i)
+            glColor4f(1.0,1.0,0.8,0.1/i)
             gluSphere(quadric,obj.rayon_simulation*(1+0.0125*i),100,30)
         glPopMatrix()
         glEnable(GL_DEPTH_TEST)
@@ -956,6 +692,7 @@ class RenderTool:
         glEnable(GL_TEXTURE_2D)
         glColor4f(1,1,1,1)
     
+
         
 
     def draw_celestial_objects(self):
@@ -1023,36 +760,123 @@ class RenderTool:
         glDisable(GL_LIGHTING)
         glDisable(GL_LIGHT0)  
     
+    def distance(self,obj):
+        return (obj.position_simulation[0]**2+obj.position_simulation[1]**2+obj.position_simulation[2]**2)**0.5
+
+    def draw_vitesse(self):
+        if self.SimulationState.OutilCreation.etat_present == 3 or self.SimulationState.OutilCreation.etat_present == 4: 
+            position_objet = self.objects[-1].position_simulation  # Remplacez par la manière correcte d'obtenir la position de l'objet
+            if self.SimulationState.OutilCreation.etat_present_SUB == 0 or self.SimulationState.OutilCreation.etat_present_SUB == 1: 
+                glEnable(GL_BLEND)
+                glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
+                glColor4f(1,1,1,0.25)
+                rayon=7.5
+                for obj in self.objects:
+                    if obj == self.objects[-1]:
+                        rayon=15
+                        color=self.type_object_celeste_mapping_color.get(obj.type_object)[:3]
+                        color = [col/255 for col in color]
+                        glColor4f(*color,0.4)
+                    glPushMatrix()
+                    glRotatef(90,1,0,0)
+                    quadric = gluNewQuadric()
+                    gluDisk(quadric, self.distance(obj)-rayon, self.distance(obj)+rayon, 100, 30)  # Les deux premiers arguments sont le rayon intérieur et extérieur
+                    glPopMatrix()
+                glDisable(GL_BLEND)
+                glColor4f(1,1,1,1)
+
+            if self.SimulationState.OutilCreation.etat_present_SUB == 1: 
+                glBegin(GL_LINES)
+                glVertex3f(position_objet[0], 0, position_objet[2])
+                glVertex3f(position_objet[0],position_objet[1],position_objet[2])
+                glEnd()
+
+
+        self.draw_arrow([0,0,0],self.objects[-1].position_simulation) 
+
+
+
+
+    def compute_velocity_vector_for_drawing(self,obj):
+        position = obj.position_simulation
+        vitesse = obj.velocity
+        vecteur = [vitesse[i]/1000+position[i] for i,elem in enumerate(vitesse)]
+        return vecteur
+
+    def draw_arrow(self, start, end,opacity=0.5):
+
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
+        glColor4f(1,1,1,1)
+        # Calculez la direction de la flèche
+        direction = np.array([end[0] - start[0], end[1] - start[1], end[2] - start[2]])
+        arrow_length = np.linalg.norm(direction)
+        if arrow_length ==0:return
+        direction_normalized = direction / arrow_length
+
+        # Calculez la longueur et la largeur de la tête en pourcentage de la longueur totale
+        arrowhead_length_percent = 0.05  # Ajustez ce pourcentage selon vos besoins
+
+        arrowhead_length = arrow_length * arrowhead_length_percent
+        radius = 0.25
+        arrowhead_width = radius*arrowhead_length
+        # Calculez l'angle et l'axe de rotation pour aligner la flèche avec la direction
+        z_axis = np.array([0, 0, 1])
+        axis = np.cross(z_axis, direction_normalized)
+        angle = math.degrees(math.acos(np.dot(z_axis, direction_normalized)))
+
+        # Draw the line of the arrow (line segment)
+        glPushMatrix()
+        glLineWidth(2.0)  # Adjust line width as needed
+        glBegin(GL_LINES)
+        glVertex3f(start[0], start[1], start[2])
+        glVertex3f(end[0], end[1], end[2])
+        glEnd()
+        glPopMatrix()
+
+        # Dessinez la tête de la flèche (cône)
+        glPushMatrix()
+        glTranslatef(start[0], start[1], start[2])  # Commencez par déplacer à la position de départ
+        glRotatef(angle, axis[0], axis[1], axis[2])  # Ensuite, appliquez la rotation
+        glTranslatef(0, 0, arrow_length - arrowhead_length)  # Enfin, déplacez le long de l'axe Z après rotation
+        quadric = gluNewQuadric()
+        gluCylinder(quadric, arrowhead_width, 0, arrowhead_length, 1000, 1000)
+        glPopMatrix()
+
 
 
     def draw(self):
 
         #Setup 2D + Fond d'écran
         self.setup_2d_projection()
-        self.set_background_test()
+        self.general_tools.set_background()
 
         #Setup 3D pour dessiner les objects celestes
         self.setup_3d_projection()
         #Bouger la caméra selon la direction
         self.move_camera()
 
+        if self.SimulationState.OutilCreation.appended:
+            self.draw_vitesse()
+
         #Dessiner les objects
         self.draw_celestial_objects()
 
+
          #Highlight selected object
         if self.selectedObject:
-            self.draw_highlight(self.selectedObject)
-            self.follow_line(self.selectedObject.position_simulation)
+            self.general_tools.draw_highlight(self.selectedObject)
+            self.general_tools.follow_line(self.selectedObject.position_simulation)
         if self.axesEnable:
-            self.draw_axes()
+            self.general_tools.draw_axes()
         else:
             self.frame_counter_axes=0
         #Path of objects:
-        self.draw_planet_path()
+        self.general_tools.draw_planet_path()
 
         #Remise en 2D
         self.setup_2d_projection()
-        if self.selectedObject:self.draw_selected_object_infos(self.selectedObject)
+        if self.selectedObject:self.general_tools.draw_selected_object_infos(self.selectedObject)
         self.draw_minimap()
         if self.SimulationState.isCreating:
             self.SimulationState.OutilCreation.draw()

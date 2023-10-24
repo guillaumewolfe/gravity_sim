@@ -48,7 +48,7 @@ class BaseState:
         self.translation_y += dx * sensitivity  
     def zoomer(self, zoom):
         # Mettez à jour les angles de rotation en fonction du mouvement de la souris
-        sensitivity = 1
+        sensitivity = 25
         self.zoom += zoom * sensitivity
 
     def load_shared_resources(self):
@@ -140,7 +140,7 @@ class StartMenuState(BaseState):
             StartMenuState.musicPlayer.queue(self.background_music)
             StartMenuState.musicPlayer.loop = True
             StartMenuState.musicPlayer.play()
-            #StartMenuState.musicPlayer.pause()
+            StartMenuState.musicPlayer.pause()
 
 
     def setup_2d_projection(self):
@@ -235,13 +235,14 @@ class SimulationState(BaseState):
             Button(self.window, 0.900, menu_pos, 0.1175, 0.045, "Menu", (255, 255, 255),self.font,opacity=20,button_sound="menu"),
             Button(self.window, 0.900, restart_pos, 0.1175, 0.045, "Restart", (255, 255, 255),self.font,opacity=20,button_sound="normal"),
             Button(self.window, 0.9, pause_pos, 0.1175, 0.045, "Pause", (255, 255, 255),self.font,opacity=20,button_sound="normal"),
-            Button(self.window, 0.26, restart_pos, 0.0800, 0.035, "Reset Camera", (255, 255, 255),self.font,opacity=20,button_sound="normal"),
+            Button(self.window, 0.038, menu_pos, 0.0500, 0.031, "Reset View", (255, 255, 255),self.font,opacity=20,button_sound="normal",isHighlight=True,highlight_color=((0,0,255,25))),
             Button(self.window, 0.900, 0.451, 0.0375, 0.030, "Zoom", (255, 255, 255),self.font,opacity=20,enable=False,button_sound="normal",isHighlight=True,highlight_color=(0,255,0,80)),
-            Button(self.window, 0.26, menu_pos, 0.0800, 0.035, "Axes", (255, 255, 255),self.font,opacity=20,isHighlight=True,isOn=2,button_sound="normal"),
+            Button(self.window, 0.19, menu_pos, 0.0300, 0.030, "Axes", (255, 255, 255),self.font,opacity=20,isHighlight=True,isOn=2,button_sound="normal"),
             Button(self.window, 0.9, add_pos, 0.1175, 0.045, "Add Object", (255, 255, 255),self.font,opacity=20,button_sound="addObject"),
             Button(self.window, 0.955, 0.925, 0.0355, 0.030, "Remove", (255, 255, 255),self.font,opacity=20,enable=False,button_sound="removeObject",isHighlight=True,highlight_color=(255,0,0,120))
             ]
-        self.objects = create_celestial_objects(CELESTIAL_PARAMETERS)
+        self.all_objects = create_celestial_objects(CELESTIAL_PARAMETERS)
+        self.objects = self.all_objects[:-2]
         background_image = pyglet.image.load("assets/textures/background.jpg")
         self.background_texture = background_image.get_texture()
         self.renderTool = render.RenderTool(window,self.labels,self.buttons,self.objects,self.rotation_x,self.rotation_y,self.rotation_z,self.translation_x,self.translation_y,self.zoom,self.background_texture,font=self.font,SimulationState=self)
@@ -251,8 +252,7 @@ class SimulationState(BaseState):
         #Mode de création d'Object
         self.planete_texture = self.load_textures()
         self.isCreating = False
-        self.OutilCreation = OutilCreation(self.planete_texture,self,self.renderTool)
-
+        self.OutilCreation = OutilCreation(self.all_objects,self,self.renderTool)
 
     def max_length(self):
         maxd = 0
@@ -283,7 +283,9 @@ class SimulationState(BaseState):
         self.labels[1] = Label(self.window.get_size(), f"Simulation Time: {self.simulation_time/86400:.2f} jours", 0.5, 0.0325, self.font, self.couleur_label, 2)
         self.labels[2] = Label(self.window.get_size(), f"Speed: x {self.time_multiplier:,}".replace(","," "), 0.5, 0.0825,self.font,self.couleur_label,2)
         #self.labels[3] = Label(self.window.get_size(), f"Selected object: {text}", 0.5, 0.1325,self.font,self.couleur_label,2)
+    
     def reset_positions(self):
+        print("here")
         self.rotation_x = 0 
         self.rotation_y = 0 
         self.rotation_z = 0 
@@ -291,10 +293,11 @@ class SimulationState(BaseState):
         self.translation_y = 0
         self.zoom = 0
         self.renderTool.followObjectEnabled = False
+
     def restart(self):
         self.reset_positions()
         self.objects = None
-        self.objects = create_celestial_objects(CELESTIAL_PARAMETERS)
+        self.objects = create_celestial_objects(CELESTIAL_PARAMETERS)[:-2]
         self.time_multiplier = 1
         self.simulation_time=0
         self.selected_object = None
@@ -307,18 +310,19 @@ class SimulationState(BaseState):
         self.rotation_x += dy * sensitivity
         self.rotation_y += dx * sensitivity   
         self.rotation_z += dz * sensitivity   
-    def focus_on_axes(self,axe):
-        self.reset_positions()
+        
+    def focus_on_axes(self,axe,reset=True):
+        if reset:
+            self.reset_positions()
+        
         diffx,diffy,diffz = 0,0,0
         if axe == "y":
             diffz = 90
-
         if axe == "x":
             diffy = +90
         self.rotation_x = -self.renderTool.rotation_initiale[2] + diffx
         self.rotation_y = -self.renderTool.rotation_initiale[1] + diffy
         self.rotation_z = -self.renderTool.rotation_initiale[0] + diffz
-        self.zoom += -200
         
 
     def update_render_tool(self):
@@ -423,7 +427,7 @@ class SimulationState(BaseState):
                     btn.play_sound()
 
                 
-                if btn.text == "Reset Camera":
+                if btn.text == "Reset View":
                     btn.play_sound()
                     self.reset_positions()
                 

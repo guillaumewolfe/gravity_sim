@@ -10,6 +10,10 @@ isAjusting = False
 def handle_input(window, current_state):
     @window.event
     def on_mouse_press(x, y, button, modifiers):
+        if hasattr(current_state, 'isCreating'):
+            if current_state.isCreating:
+                pass
+                current_state.OutilCreation.on_mouse_click(x,y)
         global isMousePressed
         isMousePressed = True
         current_state.on_mouse_press(x, y, button, modifiers)

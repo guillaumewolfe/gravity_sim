@@ -22,6 +22,7 @@ glEnable(GL_DEPTH_TEST)
 glEnable(GL_MULTISAMPLE)
 
 
+
 @window.event
 def on_draw():
     window.clear()
@@ -39,7 +40,7 @@ pyglet.clock.schedule_interval(update, 1/60.0)
 
 
 
-#FPS:
+#FPS:q
 #Boucle
 
 def main():

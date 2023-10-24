@@ -6,17 +6,20 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 class Button:
-    def __init__(self, window, x_rel, y_rel, width_rel, height_rel, text, color,font,opacity=255, enable = True,activated=True, isHighlight = False, highlight_color = (255,0,0,20),isOn=0,button_sound = "normal"):
+    def __init__(self, window, x_rel, y_rel, width_rel, height_rel, text, color,font,opacity=255, enable = True,activated=True, isHighlight = False, highlight_color = (255,0,0,20),isOn=0,button_sound = "normal",id = None):
         self.window = window
         self.x_rel = x_rel
         self.y_rel = y_rel
         self.width_rel = width_rel
         self.height_rel = height_rel
         self.text = text
-        self.id = text
+        if id:
+            self.id = id
+        else:
+            self.id = text
         self.color = color
         self.rectangle = None
-        self.label = None
+        self.label = self.text
         self.font=font
         self.hover = False
         self.opacity = opacity

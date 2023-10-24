@@ -34,7 +34,6 @@ def update_accel(obj, objects, dt):
 def update_vitesse(obj,dt):
     correction = 1
     obj.velocity = [elem+obj.accel[index]*dt*correction for index,elem in enumerate(obj.velocity)]
-
 def update_positions(obj, dt):
     # mise à jour de la position réelle
     obj.real_position = [obj.real_position[i] + obj.velocity[i] * dt for i in range(3)]
@@ -48,9 +47,12 @@ def update_positions(obj, dt):
 def append_position_history(obj):
     obj.update_distance_list()
     distance = obj.calculate_distance_parcourue()
-    if distance > obj.demi_orbite or len(obj.position_history)>750:
+    if (not obj.isCreated and distance > obj.demi_orbite) or len(obj.position_history)>750:
         obj.position_history.pop(0)
     obj.position_history.append(obj.position_simulation)
+    if obj.name == "test":
+        print(len(obj.position_history))
+
 
 def update_rotation(obj,dt):
     obj.rotation_siderale_angle += obj.rotation_siderale_vitesse*dt
@@ -61,10 +63,7 @@ def update_physics(objects, dt):
 
     for obj in objects:
         update_rotation(obj,dt)
-        #if obj.name=="Terre": print(len(obj.position_history))
-        if obj.name!=obj.relation:
-            #if obj.name=="Soleil": print(obj.rotation_siderale_angle)
-            update_accel(obj,objects,dt)
-            update_vitesse(obj,dt)
-            update_positions(obj,dt)
+        update_accel(obj,objects,dt)
+        update_vitesse(obj,dt)
+        update_positions(obj,dt)
         

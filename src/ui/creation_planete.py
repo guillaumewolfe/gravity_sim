@@ -14,12 +14,11 @@ import ctypes
 
 
 class OutilCreation:
-    def __init__(self,textures,SimulationState,RenderTool):
+    def __init__(self,objects,SimulationState,RenderTool):
         #Outil et autres init
-        self.textures = textures
         self.RenderTool = RenderTool
         self.SimulationState = SimulationState
-        self.object_created = Object_creation(None,None,None,None)
+        self.object_created = CelestialObject(None,None)
         self.angle_rotation = 0
         self.Titre_label = ""
 
@@ -27,9 +26,11 @@ class OutilCreation:
         self.etats = ["texture","masse","rayon","position","choix_vitesse"]
         self.liste_etats = {"texture" : self.choix_texture, "masse" : self.choix_masse, "rayon": self.choix_rayon, "position":self.choix_position, "append_to_list":self.append_to_list,"choix_vitesse":self.choix_vitesse}
         self.etat_present = 0
+        self.etat_present_SUB = 0
 
         #crée la liste d'objets
-        self.objects_creations = self.createObjectCreation()
+        self.objects_creations = self.select_object(objects)
+        self.buttons = []
 
         #Propriete:
         self.texture = None
@@ -47,8 +48,11 @@ class OutilCreation:
         self.type_object_celeste_mapping_color = {1:(250,237,97,200),2:(0,255,0,120),3:(139,69,19,150),4:(50,50,50,255)}
         self. label_sous_titre_color = (255,255,255,255)
 
-        #Choix de position
-        self.etat_present_SUB = 0
+
+        self.x = 0
+        self.y = 0
+        self.largeur = 0
+        self.hauteur = 0
 
         #Choix vitesse
         self.G = 6.67430e-11
@@ -68,27 +72,21 @@ class OutilCreation:
         self.CreationConfirmed = False
 
 
-
-    def createObjectCreation(self):
-        i = 1
-        color = (25,25,25)
+    def select_object(self,objects):
         liste = []
-        for name, texture in self.textures.items():
-            if name == "Soleil":
-                object_type = 1
-            elif name == "Black Hole":
-                object_type = 4
-            else:
-                object_type = 2
-            liste.append(Object_creation(name,texture,[i*color[n] for n,u in enumerate(color)],object_type))
-            i+=1
+        for obj in objects:
+            if obj.name != "Lune" and obj.name != "Saturne" and obj.name != "Mercure":
+                liste.append(obj)
         return liste
+    
+
     def reset(self):
         self.highlight_color = (0,1,1,0.3)
         self.selected_object_creation = None
         self.etat_present = 0
         self.etat_present_SUB = 0
-        self.object_created = Object_creation(None,None,None,None)
+        self.object_created = CelestialObject(None,None)
+        self.buttons = []
 
         if self.appended and not self.CreationConfirmed: #On enleve l'object si la creation n'a pas été confirmé
             self.SimulationState.objects.pop()
@@ -96,6 +94,7 @@ class OutilCreation:
         self.CreationConfirmed = False
         self.choix_vitesse_object_centre = None
         self.choix_vitesse_force_initiale = 0
+        self.label_sous_titre=""
 
 
         
@@ -107,6 +106,7 @@ class OutilCreation:
         self.SimulationState.reset_positions()
         self.SimulationState.buttons[6].isOn = 1
         self.reset()
+        self.RenderTool.axesEnable = False
 
         
         
@@ -128,17 +128,19 @@ class OutilCreation:
             self.souris_y = 0.5
 
         if self.etat_present_SUB == 0:
-            self.label_sous_titre = "Selection de l'axe des X"
-            self.SimulationState.objects[-1].position_simulation[0] = (self.souris_x-0.5) * self.RenderTool.maxlength / 0.5
+            self.label_sous_titre = "Distance du soleil"
+            self.SimulationState.objects[-1].position_simulation[0] = (self.souris_x-0.5) * self.RenderTool.maxlength*0.1*(1-0.1*(self.RenderTool.zoom+500)/500)
+            self.SimulationState.objects[-1].position_simulation[2] = -(self.souris_y-0.5) * self.RenderTool.maxlength *0.1*(1-0.1*(self.RenderTool.zoom+500)/500)
+            Label(self.RenderTool.window.get_size(), f"{self.calcul_real_distance(self.SimulationState.objects[-1])/(1000*1.496e8):.2f} UA", ((self.x+self.largeur)/2)/self.RenderTool.window.width, (self.y+self.hauteur)/self.RenderTool.window.height-0.25, self.SimulationState.font, (255, 255, 255, 200), 3).draw()
+            Label(self.RenderTool.window.get_size(), f"{self.calcul_real_distance(self.SimulationState.objects[-1])/(1000):,.0f} km".replace(",", ' '), ((self.x+self.largeur)/2)/self.RenderTool.window.width, (self.y+self.hauteur)/self.RenderTool.window.height-0.30, self.SimulationState.font, (255, 255, 255, 200), 1.3).draw()            
+            #print(f"{self.calcul_real_distance(self.SimulationState.objects[-1])/1000:.0f} km")
         elif self.etat_present_SUB == 1:
-            self.SimulationState.objects[-1].position_simulation[2] = -(self.souris_y-0.5) * self.RenderTool.maxlength / 0.5
-            self.label_sous_titre = "Selection de l'axe des Z"
-        elif self.etat_present_SUB == 2:
-            self.SimulationState.objects[-1].position_simulation[1] = (self.souris_y-0.5) * self.RenderTool.maxlength / 0.5
-            self.label_sous_titre = "Selection de l'axe des Y"
-        elif self.etat_present_SUB == 3:
+            self.SimulationState.objects[-1].position_simulation[1] = (self.souris_y-0.5) * self.RenderTool.maxlength*0.1
+            self.label_sous_titre = "Selection de la hauteur"
+            Label(self.RenderTool.window.get_size(), f"{self.calcul_real_distance(self.SimulationState.objects[-1])/(1000*1.496e8):.2f} UA", ((self.x+self.largeur)/2)/self.RenderTool.window.width, (self.y+self.hauteur)/self.RenderTool.window.height-0.25, self.SimulationState.font, (255, 255, 255, 200), 3).draw()
+            Label(self.RenderTool.window.get_size(), f"{self.calcul_real_distance(self.SimulationState.objects[-1])/(1000):,.0f} km".replace(",", ' '), ((self.x+self.largeur)/2)/self.RenderTool.window.width, (self.y+self.hauteur)/self.RenderTool.window.height-0.30, self.SimulationState.font, (255, 255, 255, 200), 1.3).draw()
+        elif self.etat_present_SUB == 2: #Fin
             self.SimulationState.objects[-1].real_position = [SimulationScale.from_distance(coord) for coord in self.SimulationState.objects[-1].position_simulation]
-            self.SimulationState.focus_on_axes("y")
             self.next_etat()
 
 
@@ -146,43 +148,42 @@ class OutilCreation:
 
     def choix_vitesse(self):#ETAT #4 
         #Titre
-        self.Titre_label = "Choose speed"
-
         #Étape 0 : Selection de l'object qui exerce la plus grande force, ajout de l'object dans self.choix_vitesse_object_centre
         #Etape 1 : Avec la souris, on calcul la vitesse initiale, puis on utilise cette vitesse pour dessiner l'éclipse
         #Etape 2 : Confirmation de la commande + Creation de l'object self.end()
 
 
         if self.etat_present_SUB == 0: #Etape 0
+            self.Titre_label = "Choose speed"
+            self.label_sous_titre=""
+            self.buttons.append(Button(self.RenderTool.window, 0.25*(((self.x+self.largeur)/2)/self.RenderTool.window.width), (self.y+self.hauteur)/self.RenderTool.window.height-0.20,0.015, 0.035,"-",(255,255,255),self.SimulationState.font,opacity=50,isHighlight=True,highlight_color=(255,0,0,35),id="-vitesse"))
+            self.buttons.append(Button(self.RenderTool.window, 1.85*(((self.x+self.largeur)/2)/self.RenderTool.window.width), (self.y+self.hauteur)/self.RenderTool.window.height-0.20,0.015, 0.035,"+",(255,255,255),self.SimulationState.font,opacity=50,isHighlight=True,highlight_color=(0,255,0,35),id="+vitesse"))
+            self.buttons.append(Button(self.RenderTool.window, (((self.x+self.largeur)/2)/self.RenderTool.window.width), (self.y)/self.RenderTool.window.height+0.025,0.07, 0.035,"Confirm",(255,255,255),self.SimulationState.font,opacity=20,isHighlight=True,highlight_color=(0,255,0,80)))
             self.choix_vitesse_object_centre, self.choix_vitesse_force_initiale = self.calcul_choix_vitesse_force()
-            print("Here")
+            self.axe_rotation_position()
             self.etat_present_SUB+=1 
-            self.SimulationState.focus_on_axes("y")
+            self.vitesse_dic,self.vitesse_list = self.calculate_predefined_velocity(self.SimulationState.objects[-1],self.choix_vitesse_object_centre)
+            self.index_vitesse_list = 0
 
         elif self.etat_present_SUB == 1: #On determine la vitesse en X
-            self.vitesse_Z = (self.souris_y-0.5) * 620 / 0.5
-            self.label_sous_titre = f"{self.vitesse_Z:.1f} km/s" 
-            self.draw_vecteur_vitesse()
-
-    def draw_vecteur_vitesse(self):
-        glPushMatrix()
-        glColor3f(1, 1, 1)
-        quadric = gluNewQuadric()
-        gluSphere(quadric, 20, 100, 30)
-        glPopMatrix()
-
+            current_speed_label = self.vitesse_list[self.index_vitesse_list]
+            self.current_speed_value = self.vitesse_dic[current_speed_label]
+            Label(self.RenderTool.window.get_size(), current_speed_label, ((self.x+self.largeur)/2)/self.RenderTool.window.width, (self.y+self.hauteur)/self.RenderTool.window.height-0.18, self.SimulationState.font, (255, 255, 255, 200), 1.5).draw()
+            Label(self.RenderTool.window.get_size(), f"{self.current_speed_value:.0f} km/h", ((self.x+self.largeur)/2)/self.RenderTool.window.width, (self.y+self.hauteur)/self.RenderTool.window.height-0.21, self.SimulationState.font, (255, 255, 255, 200), 1.5).draw()
+            
+        elif self.etat_present_SUB == 2:
+            self.SimulationState.objects[-1].velocity = self.compute_speed_vector(self.current_speed_value,self.SimulationState.objects[-1],self.choix_vitesse_object_centre)
+            self.CreationConfirmed = True
+            self.end()
 
 
 
 
     def append_to_list(self):#On ajoute l'object créé
-        weight = 5.972e24
         color_id = [i+25 for i in self.SimulationState.objects[-1].color_id] 
-        self.SimulationState.objects.append(CelestialObject(self.object_created.name,self.object_created.texture, texture_isLoaded=True,rayon_simulation=5,type_object=self.object_created.type_object,weight=2*weight,color_id=color_id))
+        self.SimulationState.objects.append(CelestialObject("Creation",self.object_created.texture, texture_isLoaded=True,rayon_simulation=self.object_created.rayon_simulation,type_object=self.object_created.type_object,weight=self.object_created.weight,color_id=color_id,isCreated = True))
         self.appended = True
     
-
-
 
     def draw_background(self): #Boucle pour Background
 
@@ -194,7 +195,7 @@ class OutilCreation:
         rec.draw()
         rec2.draw()
         Label(self.RenderTool.window.get_size(), self.Titre_label, ((self.x+self.largeur)/2)/self.RenderTool.window.width, (self.y+self.hauteur)/self.RenderTool.window.height-0.06, self.SimulationState.font, (255, 255, 255, 200), 1.8).draw()
-        Label(self.RenderTool.window.get_size(), self.label_sous_titre, ((self.x+self.largeur)/2)/self.RenderTool.window.width, (self.y+self.hauteur)/self.RenderTool.window.height-0.13, self.SimulationState.font, self.label_sous_titre_color, 2).draw()
+        Label(self.RenderTool.window.get_size(), self.label_sous_titre, ((self.x+self.largeur)/2)/self.RenderTool.window.width, (self.y+self.hauteur)/self.RenderTool.window.height-0.11, self.SimulationState.font, self.label_sous_titre_color, 2).draw()
     
     def draw(self):
         self.width = self.SimulationState.window.width
@@ -210,16 +211,21 @@ class OutilCreation:
         self.draw_background()
         self.liste_etats[self.etats[self.etat_present]]()
 
+        if self.buttons:
+            for btn in self.buttons:
+                btn.draw()
 
 
-    def next_etat(self):
+
+    def next_etat(self,valeur=1):
         self.etat_present_SUB = 0
         if self.etat_present == 0:
             self.label_sous_titre =""
             self.etat_present = 3
             return
 
-        self.etat_present += 1
+        self.etat_present += valeur
+        self.buttons=[]
     
 
 
@@ -242,15 +248,27 @@ class OutilCreation:
         if self.etat_present == 3 or self.etat_present == 4:
             self.souris_x = x/self.width
             self.souris_y = y/self.height
+        if self.buttons:
+            for btn in self.buttons:
+                if btn.contains_point(x, y):
+                    btn.hover = True
+                else:
+                    btn.hover = False
+
+    def on_mouse_click(self,x,y):
+        if self.buttons:
+            for btn in self.buttons:
+                btn.click()
 
 
     def axe_rotation_position(self):
+        zoom_out = 200
         if self.etat_present_SUB == 0:
-            self.SimulationState.focus_on_axes("y")
-        elif self.etat_present_SUB ==1 :
-            self.SimulationState.focus_on_axes("y")
-        elif self.etat_present_SUB == 2 :
-            self.SimulationState.focus_on_axes("z")
+            self.SimulationState.focus_on_axes("y",reset=False)
+        elif self.etat_present_SUB == 1 :
+            self.SimulationState.focus_on_axes("z",reset=False)
+        self.SimulationState.zoomer(-zoom_out)
+
 
     def calculate_mouse_distance(self):
         # Ajustez les coordonnées de la souris pour qu'elles soient centrées autour de (0.5, 0.5)
@@ -259,30 +277,33 @@ class OutilCreation:
         
         # Calculez la distance par rapport au centre
         distance = (centered_x**2 + centered_y**2)**0.5
-        
         return distance
 
+    
 
     def on_mouse_drag(self,x,y):
         pass
 
     def on_mouse_press(self,x,y):
+        print("here")
         self.highlight_color=(1,1,1,0.2)
 
 
 
-
     def on_mouse_release(self,x,y):
+        if self.buttons:
+            for btn in self.buttons:
+                btn.unclick()
+            self.button_pressed(x,y)
         if self.etat_present == 0: #CHOIX DES TEXTURES
             self.selected_object_creation = self.RenderTool.selection_mode(x,y,mode=1,liste_objects = self.objects_creations)
             if self.selected_object_creation:
-                self.object_created.texture = self.selected_object_creation.texture
-                self.object_created.name = self.selected_object_creation.name
+                self.object_created= self.selected_object_creation
                 self.highlight_color = (0,1,1,0.3)
                 self.append_to_list()
                 self.next_etat()
                 self.RenderTool.axesEnable = True
-                self.SimulationState.focus_on_axes("y")
+                self.axe_rotation_position()
 
 
     def on_key_press(self,symbol):
@@ -290,6 +311,7 @@ class OutilCreation:
             if self.etat_present == 3: #CHOIX DES POSITIONS
                 self.etat_present_SUB+=1
                 self.axe_rotation_position()
+
 
     
         if symbol == pyglet.window.key.E:
@@ -299,12 +321,41 @@ class OutilCreation:
                     self.axe_rotation_position()
                 else: #Si en premier axe(X), on passe à l'état précedant
                     self.reset()
-                    self.etat_present = 0
+                    self.next_etat(-1)
         if symbol == pyglet.window.key.ESCAPE:
             self.end()
 
 
+    def button_pressed(self,x,y):
+        for btn in self.buttons:
+            if btn.contains_point(x, y):
+                if btn.id == "+vitesse":
+                    if self.index_vitesse_list< len(self.vitesse_list) - 1:
+                        self.index_vitesse_list += 1
+                if btn.id == "-vitesse":
+                    if self.index_vitesse_list>0:
+                        self.index_vitesse_list-=1
+                if btn.id == "Confirm":
+                    self.etat_present_SUB += 1
 
+    def calculate_predefined_velocity(self,obj_in_orbit,obj_in_middle):
+        vitesse_dic = {"":0}
+        #Orbital speed
+        orbit_speed = ((self.G*obj_in_middle.weight)/self.calcul_real_distance(obj_in_orbit))**0.5
+        vitesse_dic["Circular orbit"]=orbit_speed
+        #Escape Velocity
+        escape_velocity_speed = ((2*self.G*obj_in_middle.weight)/self.calcul_real_distance(obj_in_orbit))**0.5
+        vitesse_dic["Escape Velocity"]=escape_velocity_speed
+
+        vitesse_list = list(vitesse_dic.keys())
+        return vitesse_dic,vitesse_list
+
+
+
+
+    def calcul_real_distance(self,obj):
+        real_position = [SimulationScale.from_distance(coord) for coord in obj.position_simulation]
+        return (real_position[0]**2+real_position[1]**2+real_position[2]**2)**0.5
 
     def calcul_choix_vitesse_force(self):
         object_orbite = self.SimulationState.objects[-1]
@@ -324,6 +375,27 @@ class OutilCreation:
         return force
 
 
+    def compute_speed_vector(self,vitesse,obj,obj_centre):
+        if vitesse == 0:
+            return [0,0,0]
+        object_position = np.array([obj.real_position[0], obj.real_position[1], obj.real_position[2]])
+        object_centre = np.array([obj_centre.real_position[0], obj_centre.real_position[1], obj_centre.real_position[2]])
+
+        direction_vector = object_centre - object_position #vecteur direction entre obj et son object au centre
+        direction_length = np.linalg.norm(direction_vector) #Norme du vecteur direction
+        normalized_direction = direction_vector / direction_length #Vecteur direction normalisé
+
+        vertical_vector = np.array([0, 1, 0])  # Vecteur vertical
+        perpendicular_vector = np.cross(normalized_direction, vertical_vector)
+
+
+        perpendicular_length = np.linalg.norm(perpendicular_vector)
+        normalized_perpendicular = perpendicular_vector / perpendicular_length
+
+        object_velocity = vitesse * normalized_perpendicular
+        vx, vy, vz = object_velocity
+        velocity_list = [vx, vy, vz]
+        return velocity_list
 
 
     def dessiner_planets(self):
@@ -406,9 +478,3 @@ class OutilCreation:
 
 
 
-class Object_creation:
-    def __init__(self,name,texture,color_id,type_object):
-        self.name = name
-        self.texture = texture
-        self.color_id = color_id
-        self.type_object = type_object

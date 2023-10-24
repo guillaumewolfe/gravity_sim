@@ -5,11 +5,11 @@ from objectCelesteData import CELESTIAL_PARAMETERS
 
 
 class CelestialObject:
-    def __init__(self, name, texture, real_radius = 6371e3,texture_isLoaded = False ,real_position = [0,0,0], relation = None, type_object = 2, real_distance = 0,position_simulation=None,rayon_simulation=None ,velocity=None, force=None, accel=None, weight=None,inclinaison=None,rotation_siderale_angle=None,rotation_siderale_vitesse=None,rotation_direction=None,color_id = (0,0,0)):
+    def __init__(self, name, texture, real_radius = 6371e3,texture_isLoaded = False ,real_position = [0,0,0], relation = None, type_object = 2, real_distance = 0,position_simulation=None,rayon_simulation=None ,velocity=None, force=None, accel=None, weight=None,inclinaison=None,rotation_siderale_angle=None,rotation_siderale_vitesse=None,rotation_direction=None,color_id = (0,0,0),isCreated = False):
         self.name = name
         self.real_position = real_position  # position en unités réelles
         self.relation = relation
-        if not texture_isLoaded:
+        if texture and not texture_isLoaded:
             self.texture = pyglet.image.load(texture).get_texture()
         else:
             self.texture = texture
@@ -30,8 +30,10 @@ class CelestialObject:
         self.position_history = []
         self.max_position_history = 500
         self.drawOrbitEnable = True
+        self.isCreated = isCreated
         self.distance_list = []
-        self.demi_orbite = math.pi * SimulationScale.to_distance(real_distance)/1.25
+        self.demi_orbite = math.pi * SimulationScale.to_distance(self.real_distance)/1.25
+        
     
     def update_distance_list(self):
         if len(self.position_history)>2:
@@ -100,14 +102,14 @@ def generate_color_id(index):
 
 
 distanceTerreSoleil = 149_597_870e3
-facteur = 25
+facteur = 600
 SCALE = distanceTerreSoleil/facteur
 
 
 class SimulationScale:
     DISTANCE_SCALE = SCALE
     SIZE_MIN = 1  # Rayon minimum dans la simulation
-    SIZE_MAX = 4   # Rayon maximum (pour le Soleil)
+    SIZE_MAX = 15  # Rayon maximum (pour le Soleil)
 
     # ... Vos autres méthodes ici ...
 
@@ -118,11 +120,13 @@ class SimulationScale:
     @classmethod
     def to_size(cls, real_radius):
         if real_radius == 696_340e3:
-            return 6
+            return 20
+        if real_radius == 1737.5e3:
+            return 0.01
        
         # Mise à l'échelle linéaire
         max_radius_real = 69911e3  # Rayon de Jupiter
-        min_radius_real = 1737.5e3  # Supposons qu'il s'agisse d'un rayon minimum réaliste pour un petit objet
+        min_radius_real = 2439.7e3  # Supposons qu'il s'agisse d'un rayon minimum réaliste pour un petit objet
 
         # Interpolation linéaire entre SIZE_MIN et SIZE_MAX
         normalized_size = cls.SIZE_MIN + (real_radius - min_radius_real) / (max_radius_real - min_radius_real) * (cls.SIZE_MAX - cls.SIZE_MIN)
